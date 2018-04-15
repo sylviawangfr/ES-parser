@@ -1,0 +1,50 @@
+{
+  "settings":{
+    "analysis":{
+      "analyzer":{
+        "my_analyzer":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "filter":[
+            "lowercase"
+          ]
+        },
+        "my_html_analyzer": {
+          "tokenizer": "keyword",
+          "char_filter": ["my_char_filter"]
+        },
+        "my_stop_analyzer":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "filter":[
+            "lowercase",
+            "english_stop"
+          ]
+        }
+      },
+      "char_filter": {
+        "my_char_filter": {
+          "type": "html_strip"
+        }
+      },
+      "filter":{
+        "english_stop":{
+          "type":"stop",
+          "stopwords":"_english_"
+        }
+      }
+    }
+  },
+  "mappings":{
+    "doc":{
+      "properties":{
+        "title": {
+          "type":"text",
+          "analyzer":"my_html_analyzer",
+          "search_analyzer":"my_stop_analyzer",
+          "search_quote_analyzer":"my_analyzer"
+        }
+      }
+    }
+  }
+}

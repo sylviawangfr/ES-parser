@@ -1,0 +1,158 @@
+{
+  "mappings": {
+    "document": {
+      "properties": {
+        "content": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "my_analyzer"
+        },
+        "related_links": {
+          "properties": {
+            "parentlinks": {
+              "type": "nested",
+              "properties": {
+                "link_text": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                },
+                "href": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                },
+                "link_title": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                }
+              }
+            },
+            "relatedInfo": {
+              "type": "nested",
+              "properties": {
+                "link_text": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                },
+                "href": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                },
+                "link_title": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                }
+              }
+            },
+            "childlinks": {
+              "type": "nested",
+              "properties": {
+                "link_text": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                },
+                "href": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                },
+                "link_title": {
+                  "type": "text",
+                  "analyzer": "my_analyzer"
+                }
+              }
+            }
+          }
+        },
+        "builtinMeta": {
+          "properties": {
+            "copyright": {
+              "type": "text",
+              "store": true,
+              "analyzer": "my_analyzer"
+            },
+            "dc_type": {
+              "type": "text",
+              "store": true,
+              "analyzer": "my_analyzer"
+            },
+            "title": {
+              "type": "text"
+            },
+            "dc_abstract": {
+              "type": "text",
+              "store": true,
+              "term_vector": "with_positions_offsets",
+              "analyzer": "my_analyzer"
+            },
+            "description": {
+              "type": "text",
+              "store": true,
+              "term_vector": "with_positions_offsets",
+              "analyzer": "my_analyzer"
+            },
+            "subject": {
+              "type": "text",
+              "store": true,
+              "term_vector": "with_positions_offsets",
+              "analyzer": "my_analyzer"
+            },
+            "relations": {
+              "type": "nested"
+            },
+            "date": {
+              "type": "date",
+              "format": "strict_date_optional_time||epoch_millis"
+            },
+            "keywords": {
+              "type": "text"
+            },
+            "ibm_counry": {
+              "type": "text"
+            },
+            "language": {
+              "type": "text"
+            }
+          }
+        }
+      }
+    }
+  },
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase"
+          ]
+        },
+        "my_html_analyzer": {
+          "tokenizer": "keyword",
+          "char_filter": [
+            "my_char_filter"
+          ]
+        },
+        "my_stop_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "english_stop"
+          ]
+        }
+      },
+      "char_filter": {
+        "my_char_filter": {
+          "type": "html_strip"
+        }
+      },
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        }
+      }
+    }
+  }
+}
+

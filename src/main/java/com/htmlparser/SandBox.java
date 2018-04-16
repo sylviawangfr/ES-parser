@@ -7,7 +7,7 @@ public final class SandBox {
 
     public static void main(String[] args) {
         HtmlParser htmlParser = new HtmlParser();
-        String json = htmlParser.parseHtml();
+        htmlParser.parceAllHtml();
         int i = 0;
     }
 

@@ -8,10 +8,13 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import util.PropertyReaderUtil;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,25 +26,35 @@ public class HtmlParser {
 
     public void parceAllHtml() {
         try {
-            File input = new File("./src/main/resources/Error event IDs and error codes.html");
+            //File input = new File("./src/main/resources/Error event IDs and error codes.html");
             File dir = new File(PropertyReaderUtil.INSTANCE.getProperty("path_to_html"));
+            String jsonPath = PropertyReaderUtil.INSTANCE.getProperty("path_to_json");
 
             if (dir.exists()) {
                 for (File file : dir.listFiles()) {
                     if (file.isFile()) {
                         String json = parseHtml(file);
+                        String name = jsonPath + file.getName().replace("html", "json");
+                        saveToJsonFile(json, name);
                     }
                 }
             } else {
                 logger.error("failed to load origin html file, please check path");
             }
         } catch (Exception e) {
-            logger.error("");
+            logger.error("failed to load sample data");
         }
     }
 
-    private void saveToJsonFile(String json) {
+    private void saveToJsonFile(String json, String fileName) {
+        Path path = Paths.get(fileName);
 
+        try (BufferedWriter writer = Files.newBufferedWriter(path))
+        {
+            writer.write(json);
+        } catch (Exception e) {
+            logger.error("failed to write json to file");
+        }
     }
 
     public String parseHtml(File file) {

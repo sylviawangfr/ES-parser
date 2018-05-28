@@ -1,8 +1,8 @@
 package com.htmlparser;
 
 public class DocJson {
-    MetaData meta;
-    String body;
+    MetaData builtinMeta;
+    Sentence [] content;
     RelatedLinks related_links;
     String head;
 
@@ -14,24 +14,24 @@ public class DocJson {
         this.head = head;
     }
 
-    public String getBody() {
-        return body;
+    public Sentence [] getContent() {
+        return content;
     }
 
-    public MetaData getMeta() {
-        return meta;
+    public MetaData getBuiltinMeta() {
+        return builtinMeta;
     }
 
     public RelatedLinks getRelated_links() {
         return related_links;
     }
 
-    public void setBody(String body) {
-        this.body = body;
+    public void setContent(Sentence [] body) {
+        this.content = body;
     }
 
-    public void setMeta(MetaData meta) {
-        this.meta = meta;
+    public void setBuiltinMeta(MetaData meta) {
+        this.builtinMeta = meta;
     }
 
     public void setRelated_links(RelatedLinks related_links) {

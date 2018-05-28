@@ -8,11 +8,11 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 
 //todo: set mapper, filter, index docs etc.
 public class ESSetter {
+
+    String mapper = "ibm4";
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
 
@@ -108,7 +108,7 @@ public class ESSetter {
         try {
             //File input = new File("./src/main/resources/Error event IDs and error codes.html");
             File dir = new File(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
-            String url = "http://localhost:9200/ibm5/document/";
+            String url = "http://localhost:9200/" + mapper + "/document/";
             int docNumber = 1;
             if (dir.exists()) {
                 for (File file : dir.listFiles()) {
@@ -126,6 +126,37 @@ public class ESSetter {
             logger.error("failed to load sample data");
         }
 
+    }
+
+    public void putDocBulk() {
+        try {
+            //File input = new File("./src/main/resources/Error event IDs and error codes.html");
+            File dir = new File(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
+            String meta = "{ \"index\": {}}" + "\n";
+            String url = "http://localhost:9200/" + mapper + "/document/_bulk/";
+            if (dir.exists()) {
+                File[] listOfFiles = dir.listFiles();
+                int j = 0;
+                while (j < listOfFiles.length) {
+                    int i = 0;
+                    String bulkRequestJson = "";
+                    while (i < 10 && j < listOfFiles.length) {
+                        File file = listOfFiles[j];
+                        if (file.isFile() && file.getName().contains(".json")) {
+                            String json = readFileToStr(file);
+                            bulkRequestJson = bulkRequestJson + meta + json + "\n";
+                            i++;
+                        }
+                        j++;
+                    }
+                    postRequest(url, bulkRequestJson);
+                }
+            } else {
+                logger.error("failed to load origin html file, please check path");
+            }
+        } catch (Exception e) {
+            logger.error("failed to load sample data");
+        }
     }
 
 }

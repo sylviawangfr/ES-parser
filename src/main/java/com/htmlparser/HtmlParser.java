@@ -1,5 +1,6 @@
 package com.htmlparser;
 
+import com.esutil.SentenseSpliter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -61,9 +62,9 @@ public class HtmlParser {
         try {
             Document doc = Jsoup.parse(file, "UTF-8");
             DocJson docJson = new DocJson();
-            docJson.setMeta(parseMeta(doc));
+            docJson.setBuiltinMeta(parseMeta(doc));
             docJson.setRelated_links(parseRelatedLinks(doc));
-            docJson.setBody(parseBody(doc));
+            docJson.setContent(parseBody(doc));
             docJson.setHead(parseHead(doc));
 
             ObjectMapper mapper = new ObjectMapper();
@@ -145,8 +146,16 @@ public class HtmlParser {
         return headStr.trim();
     }
 
-    private String parseBody(Document doc) {
-        return doc.select("div[class^='body']").text();
+    private Sentence [] parseBody(Document doc) {
+        String body = doc.select("div[class^='body']").text();
+        List<String > sentencesStr =  SentenseSpliter.split(body); //.toArray(new String[0]);
+        List<Sentence> sentences = new ArrayList<>();
+        for(String s : sentencesStr) {
+            Sentence st = new Sentence();
+            st.setSentence(s);
+            sentences.add(st);
+        }
+        return sentences.toArray(new Sentence[0]);
     }
 
     private List<Link> parseLinks(Element linkEle) {
@@ -156,6 +165,7 @@ public class HtmlParser {
             Link obj = new Link();
             obj.setHref(e.attr("href"));
             obj.setTitle(e.attr("title"));
+
             obj.setLink_text(e.text());
             objList.add(obj);
         }

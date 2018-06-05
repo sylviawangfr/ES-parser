@@ -2,15 +2,53 @@
   "mappings": {
     "document": {
       "properties": {
-        "content": {
-          "type": "nested",
-          "properties": {
-            "sentence": {
-              "type": "text",
-              "term_vector": "with_positions_offsets",
-              "analyzer": "my_analyzer"
-            }
-          }
+        "sentence": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "my_analyzer"
+        },
+        "copyright": {
+          "type": "text",
+          "store": true,
+          "analyzer": "my_analyzer"
+        },
+        "dc_type": {
+          "type": "text",
+          "store": true,
+          "analyzer": "my_analyzer"
+        },
+        "title": {
+          "type": "text"
+        },
+        "dc_abstract": {
+          "type": "text",
+          "store": true,
+          "term_vector": "with_positions_offsets",
+          "analyzer": "my_analyzer"
+        },
+        "subject": {
+          "type": "text",
+          "store": true,
+          "term_vector": "with_positions_offsets",
+          "analyzer": "my_analyzer"
+        },
+        "relations": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "my_analyzer"
+        },
+        "date": {
+          "type": "date",
+          "format": "strict_date_optional_time||epoch_millis"
+        },
+        "keywords": {
+          "type": "text"
+        },
+        "ibm_country": {
+          "type": "text"
+        },
+        "language": {
+          "type": "text"
         },
         "related_links": {
           "properties": {
@@ -64,56 +102,6 @@
                   "analyzer": "my_analyzer"
                 }
               }
-            }
-          }
-        },
-        "builtinMeta": {
-          "properties": {
-            "copyright": {
-              "type": "text",
-              "store": true,
-              "analyzer": "my_analyzer"
-            },
-            "dc_type": {
-              "type": "text",
-              "store": true,
-              "analyzer": "my_analyzer"
-            },
-            "title": {
-              "type": "text"
-            },
-            "dc_abstract": {
-              "type": "text",
-              "store": true,
-              "term_vector": "with_positions_offsets",
-              "analyzer": "my_analyzer"
-            },
-            "description": {
-              "type": "text",
-              "store": true,
-              "analyzer": "my_analyzer"
-            },
-            "subject": {
-              "type": "text",
-              "store": true,
-              "term_vector": "with_positions_offsets",
-              "analyzer": "my_analyzer"
-            },
-            "relations": {
-              "type": "nested"
-            },
-            "date": {
-              "type": "date",
-              "format": "strict_date_optional_time||epoch_millis"
-            },
-            "keywords": {
-              "type": "text"
-            },
-            "ibm_country": {
-              "type": "text"
-            },
-            "language": {
-              "type": "text"
             }
           }
         }

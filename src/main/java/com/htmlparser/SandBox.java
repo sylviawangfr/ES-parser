@@ -3,6 +3,7 @@ package com.htmlparser;
 import com.esutil.ESEngine;
 import com.esutil.ESSetter;
 import com.esutil.SentenseSpliter;
+import com.htmlparsershallow.HtmlParserShallow;
 
 public final class SandBox {
 
@@ -10,10 +11,13 @@ public final class SandBox {
     }
 
     public static void main(String[] args) {
+
+        HtmlParserShallow htmlParserShallow = new HtmlParserShallow();
+        htmlParserShallow.parceAllHtml();
 //        HtmlParser htmlParser = new HtmlParser();
 //        htmlParser.parceAllHtml();
-        ESSetter esSetter = new ESSetter();
-        esSetter.putDocBulk();
+//        ESSetter esSetter = new ESSetter();
+//        esSetter.putDocBulk();
 //        ESEngine engine = new ESEngine();
 //        engine.tryQuery();
 //        SentenseSpliter ss = new SentenseSpliter();

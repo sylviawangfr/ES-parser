@@ -4,6 +4,7 @@ import com.ValueTypes.HtmlConvertor;
 import com.esutil.ESSetter;
 import com.esutil.PropertyReaderUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.htmlparser.HtmlParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -18,11 +19,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.htmlparser.HtmlParser;
-
-public class HtmlPreHandle  implements HtmlConvertor {
+public class HtmlPreHandle implements HtmlConvertor {
 
     private Logger logger = LogManager.getLogger(HtmlPreHandle.class);
+
+    String index = "ibmnested2";
+
+    public HtmlPreHandle withIndex(String newIndex) {
+        this.index = newIndex;
+        return this;
+    }
 
     public String parseHtml(File file) {
         try {
@@ -45,7 +51,7 @@ public class HtmlPreHandle  implements HtmlConvertor {
     }
 
     public void parceAllJsonToES(String pathToJson) {
-        ESSetter esSetter = new ESSetter();
+        ESSetter esSetter = new ESSetter(index);
         esSetter.putDocBulk(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
 
     }
@@ -53,7 +59,14 @@ public class HtmlPreHandle  implements HtmlConvertor {
 
     public void parceAllHtmlToJson(String pathToHtml, String pathToJson) {
         try {
+
+            File directory = new File(pathToJson);
+            if (!directory.exists()) {
+                directory.mkdir();
+            }
+
             File dir = new File(pathToHtml);
+
             if (dir.exists()) {
                 for (File file : dir.listFiles()) {
                     if (file.isFile()) {
@@ -81,7 +94,7 @@ public class HtmlPreHandle  implements HtmlConvertor {
                         jsonStrs.add(json);
                     }
                 }
-                ESSetter esSetter = new ESSetter();
+                ESSetter esSetter = new ESSetter(index);
                 esSetter.putDocBulk(jsonStrs);
             } else {
                 logger.error("failed to load origin html file, please check path");
@@ -95,8 +108,7 @@ public class HtmlPreHandle  implements HtmlConvertor {
     private void saveToJsonFile(String json, String fileName) {
         Path path = Paths.get(fileName);
 
-        try (BufferedWriter writer = Files.newBufferedWriter(path))
-        {
+        try (BufferedWriter writer = Files.newBufferedWriter(path)) {
             writer.write(json);
         } catch (Exception e) {
             logger.error("failed to write json to file");

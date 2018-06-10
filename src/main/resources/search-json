@@ -1,0 +1,55 @@
+GET ibmnested3/_search
+{
+  "_source": {
+        "excludes": [ "*"]
+    },
+    "query": {
+        "nested" : {
+            "path" : "content",
+            "inner_hits": {
+        "_source": [
+          "content.sentence", "content.id"
+        ]
+      },
+            "score_mode" : "avg",
+            "query" : {
+                "bool" : {
+                    "must" : [
+                    { "match" : {"content.sentence" : "parameter"} }
+                    ]
+                }
+            }
+        }
+    }
+}
+
+POST ibmnested3/_search
+{
+    "_source": {
+        "excludes": [ "*"]
+    },
+  "query": {
+    "bool": {
+      "must" : [
+        {
+          "match": { "_id": "1" }
+        },
+        {
+          "nested" : {
+            "path" : "content",
+            "inner_hits": {
+              "_source": false,
+              "docvalue_fields" : ["content.sentence", "content.id"]
+
+            },
+            "score_mode" : "avg",
+            "query" : {
+                "bool" : {
+                    "must" : [{ "terms": { "content.id" : [1, 4] }}]
+                }
+            }
+        }
+    }]
+    }
+  }
+}

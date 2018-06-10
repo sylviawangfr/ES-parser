@@ -2,13 +2,13 @@ package com.ValueTypes;
 
 public class Sentence {
     String sentence;
-    int id;
+    long id;
 
-    public void setId(int id) {
+    public void setId(long id) {
         this.id = id;
     }
 
-    public int getId() {
+    public long getId() {
         return id;
     }
 

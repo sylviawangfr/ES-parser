@@ -1,5 +1,6 @@
 package com.esutil;
 
+import com.ValueTypes.Sentence;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.search.join.ScoreMode;
@@ -10,19 +11,21 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 //todo: add search operation
 public class ESEngine {
 
-    String index;
+    String index = "ibmnested3";
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
 
@@ -35,12 +38,15 @@ public class ESEngine {
         try {
             // on startup
             TransportClient client = getClient();
-            GetResponse getResponse = client.prepareGet("ibm5", "document", "1").get();
+            GetResponse getResponse = client.prepareGet(index, "document", "1").get();
 
-            SearchResponse response = client.prepareSearch("ibm5")
+            SearchResponse response = client.prepareSearch(index)
                     .setTypes("document")
                     .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-                    .setQuery(QueryBuilders.matchQuery("body", "ibm"))
+                    .setQuery(QueryBuilders.nestedQuery("content",
+                            QueryBuilders.boolQuery().
+                                    must(QueryBuilders.matchQuery("content.sentence", "parameter")),
+                            ScoreMode.Avg))
                     .execute().actionGet();
 
             int count = 0;
@@ -65,7 +71,7 @@ public class ESEngine {
         try {
             Settings settings = Settings.builder().put("cluster.name", "elasticsearch_sylvia.wang").build();
             TransportClient client = new PreBuiltTransportClient(settings)
-                    .addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"),9300));
+                    .addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
             return client;
         } catch (UnknownHostException e) {
             logger.error("failed to find host. ", e);
@@ -81,34 +87,31 @@ public class ESEngine {
             SearchResponse response = client.prepareSearch(index)
                     .setTypes("document")
                     .setSearchType(SearchType.DFS_QUERY_THEN_FETCH)
-                    .setFetchSource(null, "*")
+                    .setFetchSource("_id", "*")
                     .setQuery(QueryBuilders.nestedQuery("content",
                             QueryBuilders.boolQuery().must(QueryBuilders.matchQuery("content.sentence", entity)), ScoreMode.Avg)
-                            .innerHit(new InnerHitBuilder("contentInnerHit")
-                                    .addDocValueField("content.sentence")
-                                    .addDocValueField("content.id")
+                            .innerHit(new InnerHitBuilder("content")
+                                    .setFetchSourceContext(new FetchSourceContext(true,
+                                            new String[]{"content.sentence", "content.id"}, null))
                                     .setSize(10)))
                     .execute().actionGet();
 
+            List<Sentence> contentHit = new ArrayList<>();
             for (SearchHit hit : response.getHits().getHits()) {
                 if (hit.getInnerHits() != null) {
                     for (String innerHitKey : hit.getInnerHits().keySet()) {
                         System.out.println(innerHitKey);
                         for (SearchHit innerHit : hit.getInnerHits().get(innerHitKey).getHits()) {
-                            for (String key : innerHit.getFields().keySet()) {
-                                Object innerObj = innerHit.getFields().get(key);
-                                //System.out.println(innerObj.getName() + " " + innerObj.getValue());
-                            }
+
+                            Sentence s = new Sentence();
+                            s.setSentence(innerHit.getFields().get("content.sentence").getValue());
+                            s.setId(innerHit.getFields().get("content.id").getValue());
+                            contentHit.add(s);
                         }
                     }
                 }
             }
-
-            for (SearchHit hit : response.getHits()) {
-                Map map = hit.getSourceAsMap();
-
-            }
-
+            contentHit.size();
             client.close();
         } catch (Exception e) {
             logger.error("failed to put search. ", e);

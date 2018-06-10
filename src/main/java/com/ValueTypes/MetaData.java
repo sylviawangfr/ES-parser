@@ -1,4 +1,4 @@
-package com.htmlparser;
+package com.ValueTypes;
 
 public class MetaData {
     String copyright;

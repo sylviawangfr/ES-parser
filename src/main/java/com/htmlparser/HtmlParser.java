@@ -1,5 +1,10 @@
 package com.htmlparser;
 
+import com.ValueTypes.Link;
+import com.ValueTypes.MetaData;
+import com.ValueTypes.RelatedLinks;
+import com.ValueTypes.Sentence;
+import com.esutil.PropertyReaderUtil;
 import com.esutil.SentenseSpliter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -23,61 +28,22 @@ import java.util.List;
 
 public class HtmlParser {
 
-    private Logger logger = LogManager.getLogger(HtmlParser.class);
-
-    public void parceAllHtml() {
-        try {
-            //File input = new File("./src/main/resources/Error event IDs and error codes.html");
-            File dir = new File(PropertyReaderUtil.INSTANCE.getProperty("path_to_html"));
-            String jsonPath = PropertyReaderUtil.INSTANCE.getProperty("path_to_json");
-
-            if (dir.exists()) {
-                for (File file : dir.listFiles()) {
-                    if (file.isFile()) {
-                        String json = parseHtml(file);
-                        String name = jsonPath + file.getName().replace("html", "json");
-                        saveToJsonFile(json, name);
-                    }
-                }
-            } else {
-                logger.error("failed to load origin html file, please check path");
-            }
-        } catch (Exception e) {
-            logger.error("failed to load sample data");
+    public Sentence[] parseBody(Document doc) {
+        String body = doc.select("div[class^='body']").text();
+        List<String > sentencesStr =  SentenseSpliter.split(body); //.toArray(new String[0]);
+        List<Sentence> sentences = new ArrayList<>();
+        int i = 0;
+        for(String s : sentencesStr) {
+            Sentence st = new Sentence();
+            st.setSentence(s);
+            st.setId(i);
+            sentences.add(st);
+            i++;
         }
+        return sentences.toArray(new Sentence[0]);
     }
 
-    private void saveToJsonFile(String json, String fileName) {
-        Path path = Paths.get(fileName);
-
-        try (BufferedWriter writer = Files.newBufferedWriter(path))
-        {
-            writer.write(json);
-        } catch (Exception e) {
-            logger.error("failed to write json to file");
-        }
-    }
-
-    public String parseHtml(File file) {
-        try {
-            Document doc = Jsoup.parse(file, "UTF-8");
-            DocJson docJson = new DocJson();
-            docJson.setBuiltinMeta(parseMeta(doc));
-            docJson.setRelated_links(parseRelatedLinks(doc));
-            docJson.setContent(parseBody(doc));
-            docJson.setHead(parseHead(doc));
-
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonInString = mapper.writeValueAsString(docJson);
-            return jsonInString;
-
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "[]";
-        }
-    }
-
-    private MetaData parseMeta(Document doc) {
+    public MetaData parseMeta(Document doc) {
         try {
             //get meta description content
             Elements metas = doc.select("meta");
@@ -132,7 +98,7 @@ public class HtmlParser {
         }
     }
 
-    private String parseHead(Document doc) {
+    public String parseHead(Document doc) {
         Elements head = doc.select("dochdr");
         Elements headCode = doc.select("w4tss_mtm");
         String headStr = "";
@@ -146,19 +112,7 @@ public class HtmlParser {
         return headStr.trim();
     }
 
-    private Sentence [] parseBody(Document doc) {
-        String body = doc.select("div[class^='body']").text();
-        List<String > sentencesStr =  SentenseSpliter.split(body); //.toArray(new String[0]);
-        List<Sentence> sentences = new ArrayList<>();
-        for(String s : sentencesStr) {
-            Sentence st = new Sentence();
-            st.setSentence(s);
-            sentences.add(st);
-        }
-        return sentences.toArray(new Sentence[0]);
-    }
-
-    private List<Link> parseLinks(Element linkEle) {
+    public List<Link> parseLinks(Element linkEle) {
         List<Link> objList = new ArrayList<>();
         Elements links = linkEle.select("a");
         for(Element e : links) {
@@ -172,7 +126,7 @@ public class HtmlParser {
         return objList;
     }
 
-    private List<Link> getListLinks(Document doc) {
+    public List<Link> getListLinks(Document doc) {
         Elements childLinkEles = doc.select("div.related-links > ul.ullinks > li");
         List<Link> objList = new ArrayList<>();
         for (Element e : childLinkEles) {
@@ -184,7 +138,7 @@ public class HtmlParser {
         }
         return objList;
     }
-    private RelatedLinks parseRelatedLinks(Document doc) {
+    public RelatedLinks parseRelatedLinks(Document doc) {
         try {
             RelatedLinks relatedLinks = new RelatedLinks();
             List<Link> parentLinks = new ArrayList<>();

@@ -1,4 +1,6 @@
-package com.htmlparser;
+package com.ValueTypes;
+
+import com.ValueTypes.Link;
 
 public class RelatedLinks {
     Link[] parentlinks;

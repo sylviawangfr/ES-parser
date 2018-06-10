@@ -1,6 +1,10 @@
-package com.htmlparser;
+package com.htmlNestedObjects;
 
-public class DocJson {
+import com.ValueTypes.MetaData;
+import com.ValueTypes.RelatedLinks;
+import com.ValueTypes.Sentence;
+
+public class DocJsonNestedObject {
     MetaData builtinMeta;
     Sentence [] content;
     RelatedLinks related_links;

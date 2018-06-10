@@ -1,9 +1,6 @@
-package com.htmlparser;
+package com.Executables;
 
-import com.esutil.ESEngine;
-import com.esutil.ESSetter;
-import com.esutil.SentenseSpliter;
-import com.htmlparsershallow.HtmlParserShallow;
+import com.htmlparsershallow.HtmlShallowPreHandle;
 
 public final class SandBox {
 
@@ -12,9 +9,7 @@ public final class SandBox {
 
     public static void main(String[] args) {
 
-        HtmlParserShallow htmlParserShallow = new HtmlParserShallow();
-        htmlParserShallow.parceAllHtml();
-//        HtmlParser htmlParser = new HtmlParser();
+//        HtmlParserNestedObject htmlParser = new HtmlParserNestedObject();
 //        htmlParser.parceAllHtml();
 //        ESSetter esSetter = new ESSetter();
 //        esSetter.putDocBulk();

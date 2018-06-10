@@ -18,15 +18,11 @@ import java.util.Map;
 
 //todo: add search operation
 public class ESEngine {
-
     private Logger logger = LogManager.getLogger(ESSetter.class);
     public void tryQuery() {
         try {
             // on startup
             TransportClient client = getClient();
-
-
-
             GetResponse getResponse = client.prepareGet("ibm5", "document", "1").get();
 
             SearchResponse response = client.prepareSearch("ibm5")

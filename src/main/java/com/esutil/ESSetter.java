@@ -1,6 +1,5 @@
 package com.esutil;
 
-import com.htmlparser.PropertyReaderUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -8,13 +7,21 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.List;
 
 //todo: set mapper, filter, index docs etc.
 public class ESSetter {
 
-    String mapper = "ibm4";
+    String index = "ibmnested";
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
+
+    public ESSetter(String indexName) {
+        index = indexName;
+    }
+
+    public ESSetter() {
+    }
 
     private String callRest(String requestUrl, String requestMethod) {
         String result = "";
@@ -108,7 +115,7 @@ public class ESSetter {
         try {
             //File input = new File("./src/main/resources/Error event IDs and error codes.html");
             File dir = new File(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
-            String url = "http://localhost:9200/" + mapper + "/document/";
+            String url = "http://localhost:9200/" + index + "/document/";
             int docNumber = 1;
             if (dir.exists()) {
                 for (File file : dir.listFiles()) {
@@ -128,12 +135,12 @@ public class ESSetter {
 
     }
 
-    public void putDocBulk() {
+    public void putDocBulk(String pathToJson) {
         try {
             //File input = new File("./src/main/resources/Error event IDs and error codes.html");
-            File dir = new File(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
+            File dir = new File(pathToJson);
             String meta = "{ \"index\": {}}" + "\n";
-            String url = "http://localhost:9200/" + mapper + "/document/_bulk/";
+            String url = "http://localhost:9200/" + index + "/document/_bulk/";
             if (dir.exists()) {
                 File[] listOfFiles = dir.listFiles();
                 int j = 0;
@@ -155,7 +162,30 @@ public class ESSetter {
                 logger.error("failed to load origin html file, please check path");
             }
         } catch (Exception e) {
-            logger.error("failed to load sample data");
+            logger.error("failed to load sample data: ", e);
+        }
+    }
+
+    public void putDocBulk(List<String> jsonStrs) {
+        try {
+            String meta = "{ \"index\": {}}" + "\n";
+            String url = "http://localhost:9200/" + index + "/document/_bulk/";
+
+            int j = 0;
+            while (j < jsonStrs.size()) {
+                int i = 0;
+                String bulkRequestJson = "";
+                while (i < 10 && j < jsonStrs.size()) {
+                    String json = jsonStrs.get(j);
+                    bulkRequestJson = bulkRequestJson + meta + json + "\n";
+                    i++;
+                    j++;
+                }
+                postRequest(url, bulkRequestJson);
+            }
+
+        } catch (Exception e) {
+            logger.error("failed to load sample data: ", e);
         }
     }
 

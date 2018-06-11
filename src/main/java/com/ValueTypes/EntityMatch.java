@@ -1,22 +1,24 @@
 package com.ValueTypes;
 
-public class SentenseWindow {
-
-
+public class EntityMatch {
     String docId;
-    Sentence [] sentences;
     String entity;
+    long sentenceId;
+
+    public String getDocId() {
+        return docId;
+    }
 
     public void setDocId(String docId) {
         this.docId = docId;
     }
 
-    public Sentence[] getSentences() {
-        return sentences;
+    public long getSentenceId() {
+        return sentenceId;
     }
 
-    public void setSentences(Sentence[] sentences) {
-        this.sentences = sentences;
+    public void setSentenceId(long sentenceId) {
+        this.sentenceId = sentenceId;
     }
 
     public String getEntity() {
@@ -26,10 +28,4 @@ public class SentenseWindow {
     public void setEntity(String entity) {
         this.entity = entity;
     }
-
-
-    public String getDocId() {
-        return docId;
-    }
-
 }

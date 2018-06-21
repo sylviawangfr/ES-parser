@@ -1,6 +1,7 @@
-package com.htmlNestedObjects;
+package com.htmlThreeSentenses;
 
 import com.ValueTypes.HtmlConvertor;
+import com.ValueTypes.Sentence;
 import com.esutil.ESSetter;
 import com.esutil.PropertyReaderUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,42 +18,66 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
-public class HtmlPreHandle implements HtmlConvertor {
+public class HtmlThreeSentencePreHandle implements HtmlConvertor {
 
-    private Logger logger = LogManager.getLogger(HtmlPreHandle.class);
+    private Logger logger = LogManager.getLogger(HtmlThreeSentencePreHandle.class);
 
-    String index = "ibmnested2";
+    String index = "ibm3s";
 
-    public HtmlPreHandle withIndex(String newIndex) {
+    public HtmlThreeSentencePreHandle withIndex(String newIndex) {
         this.index = newIndex;
         return this;
     }
 
-    public String parseHtml(File file) {
+    private List<DocJsonThreeSentences> parseHtmlToSentenceWindows(File file) {
+        List<DocJsonThreeSentences> contents = new ArrayList<>();
         try {
+            String name = file.getName();
             HtmlParser htmlParser = new HtmlParser();
             Document doc = Jsoup.parse(file, "UTF-8");
-            DocJsonNestedObject docJson = new DocJsonNestedObject();
-            docJson.setBuiltinMeta(htmlParser.parseMeta(doc));
-            docJson.setRelated_links(htmlParser.parseRelatedLinks(doc));
-            docJson.setContent(htmlParser.parseBody(doc));
-            docJson.setHead(htmlParser.parseHead(doc));
+            List<Sentence> sentences = Arrays.asList(htmlParser.parseBody(doc));
+            int i = 0;
+            int j = 0;
+            int length = sentences.size();
 
-            ObjectMapper mapper = new ObjectMapper();
-            String jsonInString = mapper.writeValueAsString(docJson);
-            return jsonInString;
+            while(i < length) {
+                String window = "";
+                while(j < length && j < i + 3) {
+                    window = window + sentences.get(j).getSentence();
+                    j++;
+                }
+                DocJsonThreeSentences json = new DocJsonThreeSentences();
+                json.setFileName(name);
+                json.setSentence(window);
+                json.setNumber(i);
+                contents.add(json);
 
+                if (j == length) {
+                    break;
+                } else {
+                    i = i + 2;
+                    j = i;
+                }
+
+            }
         } catch (IOException e) {
             e.printStackTrace();
-            return "[]";
+        } finally {
+            return contents;
         }
+    }
+
+    public String parseHtml(File file) {
+        return "";
     }
 
     public void parceAllJsonToES(String pathToJson) {
         ESSetter esSetter = new ESSetter(index);
         esSetter.putDocBulk(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
+
     }
 
 
@@ -67,11 +92,16 @@ public class HtmlPreHandle implements HtmlConvertor {
             File dir = new File(pathToHtml);
 
             if (dir.exists()) {
+                ObjectMapper mapper = new ObjectMapper();
                 for (File file : dir.listFiles()) {
                     if (file.isFile()) {
-                        String json = parseHtml(file);
-                        String name = pathToJson + file.getName().replace("html", "json");
-                        saveToJsonFile(json, name);
+                        List<DocJsonThreeSentences> jsonObjs = parseHtmlToSentenceWindows(file);
+                        for(DocJsonThreeSentences s : jsonObjs) {
+                            String json = mapper.writeValueAsString(s);
+                            String name = pathToJson + file.getName().replace(".html", "_" + String.valueOf(s.getNumber()) + ".json");
+                            saveToJsonFile(json, name);
+                        }
+
                     }
                 }
             } else {
@@ -87,10 +117,14 @@ public class HtmlPreHandle implements HtmlConvertor {
             File dir = new File(pathToHtml);
             List<String> jsonStrs = new ArrayList();
             if (dir.exists()) {
+                ObjectMapper mapper = new ObjectMapper();
                 for (File file : dir.listFiles()) {
                     if (file.isFile()) {
-                        String json = parseHtml(file);
-                        jsonStrs.add(json);
+                        List<DocJsonThreeSentences> jsonObjs = parseHtmlToSentenceWindows(file);
+                        for(DocJsonThreeSentences s : jsonObjs) {
+                            String json = mapper.writeValueAsString(s);
+                            jsonStrs.add(json);
+                        }
                     }
                 }
                 ESSetter esSetter = new ESSetter(index);

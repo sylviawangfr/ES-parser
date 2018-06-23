@@ -1,10 +1,12 @@
-package com.ValueTypes;
+package com.htmlNestedObjects;
+
+import com.ValueTypes.Sentence;
 
 public class SentenseWindow {
 
 
     String docId;
-    Sentence [] sentences;
+    Sentence[] sentences;
     String entity;
 
     public void setDocId(String docId) {

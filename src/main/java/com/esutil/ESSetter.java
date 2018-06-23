@@ -20,9 +20,6 @@ public class ESSetter {
         index = indexName;
     }
 
-    public ESSetter() {
-    }
-
     private String callRest(String requestUrl, String requestMethod) {
         String result = "";
         try {

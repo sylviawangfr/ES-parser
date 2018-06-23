@@ -1,9 +1,9 @@
-package com.htmlThreeSentenses;
+package com.htmlSentenceWindow;
 
 import java.util.List;
 import java.util.Map;
 
-public class ResultHitJsonThreeSentences {
+public class ResultHitJsonSW {
     String fileName;
     String sentence;
     long number;
@@ -11,7 +11,7 @@ public class ResultHitJsonThreeSentences {
     String entity2;
     String entity3;
 
-    public ResultHitJsonThreeSentences(Map<String, String> sentenseWindow, List<String> entities) {
+    public ResultHitJsonSW(Map<String, String> sentenseWindow, List<String> entities) {
         fileName = sentenseWindow.get("fileName");
         sentence = sentenseWindow.get("sentence");
         number = Long.parseLong(sentenseWindow.get("number"));

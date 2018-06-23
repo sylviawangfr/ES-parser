@@ -4,7 +4,7 @@ import com.ValueTypes.HtmlConvertor;
 import com.esutil.ESSetter;
 import com.esutil.PropertyReaderUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.htmlparser.HtmlParser;
+import com.esutil.HtmlParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -19,13 +19,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HtmlPreHandle implements HtmlConvertor {
+public class HtmlPreHandleNestedObject implements HtmlConvertor {
 
-    private Logger logger = LogManager.getLogger(HtmlPreHandle.class);
+    private Logger logger = LogManager.getLogger(HtmlPreHandleNestedObject.class);
 
     String index = "ibmnested2";
 
-    public HtmlPreHandle withIndex(String newIndex) {
+    public HtmlPreHandleNestedObject withIndex(String newIndex) {
         this.index = newIndex;
         return this;
     }

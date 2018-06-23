@@ -2,7 +2,7 @@ package com.Executables;
 
 import com.ValueTypes.HtmlConvertor;
 import com.esutil.PropertyReaderUtil;
-import com.htmlThreeSentenses.HtmlThreeSentencePreHandle;
+import com.htmlSentenceWindow.HtmlPreHandleSW;
 
 public final class JsonToES {
 
@@ -10,7 +10,7 @@ public final class JsonToES {
     }
 
     public static void main(String[] args) {
-        HtmlConvertor htmlHandler = new HtmlThreeSentencePreHandle();
+        HtmlConvertor htmlHandler = new HtmlPreHandleSW();
         htmlHandler.parseAllJsonToES(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
     }
 }

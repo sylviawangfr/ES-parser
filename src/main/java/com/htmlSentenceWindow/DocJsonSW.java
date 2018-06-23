@@ -1,6 +1,6 @@
-package com.htmlThreeSentenses;
+package com.htmlSentenceWindow;
 
-public class DocJsonThreeSentences {
+public class DocJsonSW {
     String fileName;
     String sentence;
     long number;

@@ -1,11 +1,11 @@
-package com.htmlThreeSentenses;
+package com.htmlSentenceWindow;
 
 import com.ValueTypes.HtmlConvertor;
 import com.ValueTypes.Sentence;
 import com.esutil.ESSetter;
 import com.esutil.PropertyReaderUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.htmlparser.HtmlParser;
+import com.esutil.HtmlParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jsoup.Jsoup;
@@ -21,19 +21,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class HtmlThreeSentencePreHandle implements HtmlConvertor {
+public class HtmlPreHandleSW implements HtmlConvertor {
 
-    private Logger logger = LogManager.getLogger(HtmlThreeSentencePreHandle.class);
+    private Logger logger = LogManager.getLogger(HtmlPreHandleSW.class);
 
     String index = "ibm3s";
 
-    public HtmlThreeSentencePreHandle withIndex(String newIndex) {
+    public HtmlPreHandleSW withIndex(String newIndex) {
         this.index = newIndex;
         return this;
     }
 
-    private List<DocJsonThreeSentences> parseHtmlToSentenceWindows(File file) {
-        List<DocJsonThreeSentences> contents = new ArrayList<>();
+    private List<DocJsonSW> parseHtmlToSentenceWindows(File file) {
+        List<DocJsonSW> contents = new ArrayList<>();
         try {
             String name = file.getName();
             HtmlParser htmlParser = new HtmlParser();
@@ -49,7 +49,7 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
                     window = window + sentences.get(j).getSentence();
                     j++;
                 }
-                DocJsonThreeSentences json = new DocJsonThreeSentences();
+                DocJsonSW json = new DocJsonSW();
                 json.setFileName(name);
                 json.setSentence(window);
                 json.setNumber(i);
@@ -95,8 +95,8 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
                 ObjectMapper mapper = new ObjectMapper();
                 for (File file : dir.listFiles()) {
                     if (file.isFile()) {
-                        List<DocJsonThreeSentences> jsonObjs = parseHtmlToSentenceWindows(file);
-                        for (DocJsonThreeSentences s : jsonObjs) {
+                        List<DocJsonSW> jsonObjs = parseHtmlToSentenceWindows(file);
+                        for (DocJsonSW s : jsonObjs) {
                             String json = mapper.writeValueAsString(s);
                             String name = pathToJson + file.getName().replace(".html", "_" + String.valueOf(s.getNumber()) + ".json");
                             saveToJsonFile(json, name);
@@ -137,8 +137,8 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
             ObjectMapper mapper = new ObjectMapper();
             for (File file : listOfFile) {
                 if (file.isFile()) {
-                    List<DocJsonThreeSentences> jsonObjs = parseHtmlToSentenceWindows(file);
-                    for (DocJsonThreeSentences s : jsonObjs) {
+                    List<DocJsonSW> jsonObjs = parseHtmlToSentenceWindows(file);
+                    for (DocJsonSW s : jsonObjs) {
                         String json = mapper.writeValueAsString(s);
                         jsonStrs.add(json);
                     }

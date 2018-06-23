@@ -1,4 +1,4 @@
-package com.htmlThreeSentenses;
+package com.htmlSentenceWindow;
 
 import com.esutil.ESSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,13 +20,13 @@ import java.util.List;
 import java.util.Map;
 
 //todo: add search operation
-public class ESEngine3Sentences {
+public class ESEngineSW {
 
     String index = "ibm3s";
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
 
-    public ESEngine3Sentences withIndex(String newIndex) {
+    public ESEngineSW withIndex(String newIndex) {
         this.index = newIndex;
         return this;
     }
@@ -75,9 +75,9 @@ public class ESEngine3Sentences {
         }
     }
 
-    public List<ResultHitJsonThreeSentences> searchEntities(List<String> entitys) {
+    public List<ResultHitJsonSW> searchEntities(List<String> entitys) {
         try {
-            List<ResultHitJsonThreeSentences> results = new ArrayList<>();
+            List<ResultHitJsonSW> results = new ArrayList<>();
             TransportClient client = getClient();
             String queryString = "";
             for (String e : entitys) {
@@ -93,7 +93,7 @@ public class ESEngine3Sentences {
 
             for (SearchHit hit : response.getHits()) {
                 Map map = hit.getSourceAsMap();
-                ResultHitJsonThreeSentences r = new ResultHitJsonThreeSentences(map, entitys);
+                ResultHitJsonSW r = new ResultHitJsonSW(map, entitys);
                 results.add(r);
             }
 
@@ -106,11 +106,11 @@ public class ESEngine3Sentences {
         }
     }
 
-    public void saveResult(List<ResultHitJsonThreeSentences> result) {
+    public void saveResult(List<ResultHitJsonSW> result) {
         try {
             List<String> jsonStrs = new ArrayList();
             ObjectMapper mapper = new ObjectMapper();
-            for (ResultHitJsonThreeSentences r : result) {
+            for (ResultHitJsonSW r : result) {
                 jsonStrs.add(mapper.writeValueAsString(r));
             }
             String resultIndex = "ibmentitymatch";

@@ -1,31 +1,17 @@
 package com.htmlparsershallow;
 
-import com.ValueTypes.Link;
-import com.ValueTypes.MetaData;
-import com.ValueTypes.RelatedLinks;
-import com.esutil.PropertyReaderUtil;
-import com.esutil.SentenseSpliter;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 
-public class HtmlShallowPreHandle {
+public class HtmlPreHandleShallow {
 
-    private Logger logger = LogManager.getLogger(HtmlShallowPreHandle.class);
+    private Logger logger = LogManager.getLogger(HtmlPreHandleShallow.class);
 
 //    public void parceAllHtml() {
 //        try {

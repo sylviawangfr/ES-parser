@@ -53,3 +53,41 @@ POST ibmnested3/_search
     }
   }
 }
+
+GET ibm3s/_search
+{
+  "query" : {
+      "bool": {
+          "must": [
+                  {
+                    "match": {
+                      "sentence": "parameter"
+                    }
+                  },
+                  {
+                    "match": {
+                      "sentence": "device"
+                    }
+                  },
+                  {
+                    "match": {
+                      "sentence": "supply"
+                    }
+                  }
+                ]
+    }
+  }
+}
+
+GET ibm3s/_search
+{
+  "from" : 0, "size" : 10,
+    "query": {
+        "simple_query_string" : {
+            "fields" : ["sentence"],
+            "query" : "+parameter +device +supply"
+        }
+    }
+}
+
+

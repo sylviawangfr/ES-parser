@@ -8,7 +8,7 @@
             "sentence": {
               "type": "text",
               "term_vector": "with_positions_offsets",
-              "analyzer": "my_analyzer"
+              "analyzer": "my_analyzer",
               "fielddata": true
             },
             "id": {

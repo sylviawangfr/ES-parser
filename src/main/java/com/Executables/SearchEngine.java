@@ -1,14 +1,14 @@
 package com.Executables;
 
-import com.esutil.ESEngine;
+import com.htmlThreeSentenses.ESEngine3Sentences;
 
 public final class SearchEngine {
 
 
     public static void main(String[] args) {
-        ESEngine esEngine = new ESEngine();
+        ESEngine3Sentences esEngine = new ESEngine3Sentences();
         //esEngine.tryQuery();
-        esEngine.searchEntities("parameter");
+        esEngine.tryQuery();
     }
 
 

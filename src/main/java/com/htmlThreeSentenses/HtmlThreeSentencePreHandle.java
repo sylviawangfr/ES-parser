@@ -43,9 +43,9 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
             int j = 0;
             int length = sentences.size();
 
-            while(i < length) {
+            while (i < length) {
                 String window = "";
-                while(j < length && j < i + 3) {
+                while (j < length && j < i + 3) {
                     window = window + sentences.get(j).getSentence();
                     j++;
                 }
@@ -58,7 +58,7 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
                 if (j == length) {
                     break;
                 } else {
-                    i = i + 2;
+                    i = i + 1;
                     j = i;
                 }
 
@@ -74,14 +74,14 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
         return "";
     }
 
-    public void parceAllJsonToES(String pathToJson) {
+    public void parseAllJsonToES(String pathToJson) {
         ESSetter esSetter = new ESSetter(index);
         esSetter.putDocBulk(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
 
     }
 
 
-    public void parceAllHtmlToJson(String pathToHtml, String pathToJson) {
+    public void parseAllHtmlToJson(String pathToHtml, String pathToJson) {
         try {
 
             File directory = new File(pathToJson);
@@ -96,7 +96,7 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
                 for (File file : dir.listFiles()) {
                     if (file.isFile()) {
                         List<DocJsonThreeSentences> jsonObjs = parseHtmlToSentenceWindows(file);
-                        for(DocJsonThreeSentences s : jsonObjs) {
+                        for (DocJsonThreeSentences s : jsonObjs) {
                             String json = mapper.writeValueAsString(s);
                             String name = pathToJson + file.getName().replace(".html", "_" + String.valueOf(s.getNumber()) + ".json");
                             saveToJsonFile(json, name);
@@ -112,26 +112,42 @@ public class HtmlThreeSentencePreHandle implements HtmlConvertor {
         }
     }
 
-    public void parceAllHtmlToES(String pathToHtml) {
-        try {
-            File dir = new File(pathToHtml);
-            List<String> jsonStrs = new ArrayList();
-            if (dir.exists()) {
-                ObjectMapper mapper = new ObjectMapper();
-                for (File file : dir.listFiles()) {
-                    if (file.isFile()) {
-                        List<DocJsonThreeSentences> jsonObjs = parseHtmlToSentenceWindows(file);
-                        for(DocJsonThreeSentences s : jsonObjs) {
-                            String json = mapper.writeValueAsString(s);
-                            jsonStrs.add(json);
-                        }
-                    }
-                }
-                ESSetter esSetter = new ESSetter(index);
-                esSetter.putDocBulk(jsonStrs);
+    private List<File> getAllFilesFromPath(String directoryName) {
+        // get all the files from a directory
+        File directory = new File(directoryName);
+        List<File> resultList = new ArrayList<File>();
+        File[] fList = directory.listFiles();
+        for (File file : fList) {
+            if (file.isDirectory()) {
+                resultList.addAll(getAllFilesFromPath(file.getAbsolutePath()));
             } else {
-                logger.error("failed to load origin html file, please check path");
+                if (file.isFile() && file.getName().contains("html")) {
+                    resultList.add(file);
+                }
             }
+        }
+        return resultList;
+    }
+
+    public void parseAllHtmlToES(String pathToHtml) {
+        try {
+            List<File> listOfFile = getAllFilesFromPath(pathToHtml);
+            List<String> jsonStrs = new ArrayList();
+
+            ObjectMapper mapper = new ObjectMapper();
+            for (File file : listOfFile) {
+                if (file.isFile()) {
+                    List<DocJsonThreeSentences> jsonObjs = parseHtmlToSentenceWindows(file);
+                    for (DocJsonThreeSentences s : jsonObjs) {
+                        String json = mapper.writeValueAsString(s);
+                        jsonStrs.add(json);
+                    }
+
+                }
+            }
+            ESSetter esSetter = new ESSetter(index);
+            esSetter.putDocBulk(jsonStrs);
+
         } catch (Exception e) {
             logger.error("failed to load sample data: ", e);
         }

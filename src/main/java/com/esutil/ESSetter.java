@@ -12,7 +12,7 @@ import java.util.List;
 //todo: set mapper, filter, index docs etc.
 public class ESSetter {
 
-    String index = "ibmnested2";
+    String index;
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
 

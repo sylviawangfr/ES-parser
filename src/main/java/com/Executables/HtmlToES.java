@@ -1,8 +1,8 @@
 package com.Executables;
 
+import com.ValueTypes.HtmlConvertor;
 import com.esutil.PropertyReaderUtil;
-import com.htmlNestedObjects.HtmlPreHandle;
-import com.htmlparsershallow.HtmlShallowPreHandle;
+import com.htmlThreeSentenses.HtmlThreeSentencePreHandle;
 
 public final class HtmlToES {
 
@@ -10,8 +10,8 @@ public final class HtmlToES {
     }
 
     public static void main(String[] args) {
-        HtmlPreHandle htmlHandler = new HtmlPreHandle();
-        htmlHandler.parceAllHtmlToES(PropertyReaderUtil.INSTANCE.getProperty("path_to_html"));
+        HtmlConvertor htmlHandler = new HtmlThreeSentencePreHandle();
+        htmlHandler.parseAllHtmlToES(PropertyReaderUtil.INSTANCE.getProperty("path_to_html"));
     }
 
 

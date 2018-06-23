@@ -50,13 +50,13 @@ public class HtmlPreHandle implements HtmlConvertor {
         }
     }
 
-    public void parceAllJsonToES(String pathToJson) {
+    public void parseAllJsonToES(String pathToJson) {
         ESSetter esSetter = new ESSetter(index);
         esSetter.putDocBulk(PropertyReaderUtil.INSTANCE.getProperty("path_to_json"));
     }
 
 
-    public void parceAllHtmlToJson(String pathToHtml, String pathToJson) {
+    public void parseAllHtmlToJson(String pathToHtml, String pathToJson) {
         try {
 
             File directory = new File(pathToJson);
@@ -82,7 +82,7 @@ public class HtmlPreHandle implements HtmlConvertor {
         }
     }
 
-    public void parceAllHtmlToES(String pathToHtml) {
+    public void parseAllHtmlToES(String pathToHtml) {
         try {
             File dir = new File(pathToHtml);
             List<String> jsonStrs = new ArrayList();

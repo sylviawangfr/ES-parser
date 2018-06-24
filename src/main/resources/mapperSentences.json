@@ -44,6 +44,11 @@
             "lowercase",
             "english_stop"
           ]
+        },
+        "my_entity_analyzer": {
+          "type":      "pattern",
+          "pattern":   "\\_",
+          "lowercase": true
         }
       },
       "char_filter": {

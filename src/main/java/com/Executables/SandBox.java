@@ -1,5 +1,12 @@
 package com.Executables;
 
+import com.esutil.OWL2NT;
+import com.htmlSentenceWindow.ESEngineSW;
+import com.htmlSentenceWindow.ResultHitJsonSW;
+
+import java.util.Arrays;
+import java.util.List;
+
 public final class SandBox {
 
     private SandBox() {
@@ -7,14 +14,16 @@ public final class SandBox {
 
     public static void main(String[] args) {
 
-//        HtmlParserNestedObject htmlParser = new HtmlParserNestedObject();
-//        htmlParser.parceAllHtml();
-//        ESSetter esSetter = new ESSetter();
-//        esSetter.putDocBulk();
-//        ESEngine engine = new ESEngine();
-//        engine.tryQuery();
-//        SentenseSpliter ss = new SentenseSpliter();
-//        ss.split("This is sentense1, this is part 2. This is sentense2, this is part3?");
+        OWL2NT converter = new OWL2NT();
+        List<List<String>> tripples = converter.parseEntities();
+        ESEngineSW esEngine = new ESEngineSW();
+        for (List<String> tri : tripples) {
+            List<ResultHitJsonSW> matchString = esEngine.searchEntitiesMatchString(tri);
+            if (matchString.size() > 0) {
+                esEngine.saveResult(matchString, "ibm3smatchstring");
+            }
+        }
+
     }
 
 

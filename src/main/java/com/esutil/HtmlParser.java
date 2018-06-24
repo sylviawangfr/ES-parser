@@ -28,8 +28,13 @@ import java.util.List;
 
 public class HtmlParser {
 
+
+    public Document parseFile(File file) throws IOException {
+        return Jsoup.parse(file, "UTF-8");
+    }
+
     public Sentence[] parseBody(Document doc) {
-        String body = doc.select("div[class^='body']").text();
+        String body = doc.select("body > doc").text();
         List<String > sentencesStr =  SentenseSpliter.split(body); //.toArray(new String[0]);
         List<Sentence> sentences = new ArrayList<>();
         int i = 0;

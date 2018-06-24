@@ -32,12 +32,13 @@ public class HtmlPreHandleSW implements HtmlConvertor {
         return this;
     }
 
+
     private List<DocJsonSW> parseHtmlToSentenceWindows(File file) {
         List<DocJsonSW> contents = new ArrayList<>();
         try {
             String name = file.getName();
             HtmlParser htmlParser = new HtmlParser();
-            Document doc = Jsoup.parse(file, "UTF-8");
+            Document doc = htmlParser.parseFile(file);
             List<Sentence> sentences = Arrays.asList(htmlParser.parseBody(doc));
             int i = 0;
             int j = 0;

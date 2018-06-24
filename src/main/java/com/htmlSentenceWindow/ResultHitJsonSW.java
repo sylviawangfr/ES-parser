@@ -11,10 +11,10 @@ public class ResultHitJsonSW {
     String entity2;
     String entity3;
 
-    public ResultHitJsonSW(Map<String, String> sentenseWindow, List<String> entities) {
-        fileName = sentenseWindow.get("fileName");
-        sentence = sentenseWindow.get("sentence");
-        number = Long.parseLong(sentenseWindow.get("number"));
+    public ResultHitJsonSW(Map<String, Object> sentenseWindow, List<String> entities) {
+        fileName = sentenseWindow.get("fileName").toString();
+        sentence = sentenseWindow.get("sentence").toString();
+        number = Long.parseLong(sentenseWindow.get("number").toString());
         if (entities.size() > 0) {
             entity1 = entities.get(0);
         }

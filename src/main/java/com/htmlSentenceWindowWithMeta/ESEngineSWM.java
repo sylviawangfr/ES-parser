@@ -1,4 +1,4 @@
-package com.htmlSentenceWindow;
+package com.htmlSentenceWindowWithMeta;
 
 import com.esutil.ESSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -10,7 +10,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.sort.SortOrder;
@@ -24,14 +23,14 @@ import java.util.List;
 import java.util.Map;
 
 //todo: add search operation
-public class ESEngineSW {
+public class ESEngineSWM {
 
-    String index = "ibm3s";
-    String resultIndex = "ibm3smatchstring";
+    String index = "ibm3s-with-meta";
+    String resultIndex = "ibm3s-with-meta-result";
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
 
-    public ESEngineSW withIndex(String newIndex) {
+    public ESEngineSWM withIndex(String newIndex) {
         this.index = newIndex;
         return this;
     }
@@ -79,99 +78,45 @@ public class ESEngineSW {
             return null;
         }
     }
-    /*
-    GET ibm3s/_search
-{
-  "from" : 0, "size" : 10,
-    "query": {
-        "query_string" : {
-            "default_field" : "sentence",
-            "query" : "(audit_log_file) AND (is_specified)",
-            "analyzer" : "my_entity_analyzer",
-            "minimum_should_match" : "10%"
-        }
-    },
-    "sort" : [
-        "_score"
-    ]
-}
-     */
-
-    public List<ResultHitJsonSW> searchEntitiesMatchString(List<String> entitys) {
-        try {
-            List<ResultHitJsonSW> results = new ArrayList<>();
-            TransportClient client = getClient();
-            String queryString = "";
-            for (String e : entitys) {
-                queryString = queryString + " AND " + "(" + e + ") ";
-            }
-
-            queryString = queryString.replaceFirst(" AND ", "").trim();
-
-            SearchResponse response = client.prepareSearch(index)
-                    .setTypes("document")
-                    .setSearchType(SearchType.QUERY_THEN_FETCH)
-                    .setQuery(QueryBuilders.queryStringQuery(queryString).field("sentence").analyzer("my_entity_analyzer"))
-                    .setFrom(0)
-                    .setSize(10)
-                    .addSort("_score", SortOrder.DESC)
-                    .execute().actionGet();
-
-            for (SearchHit hit : response.getHits()) {
-                Map map = hit.getSourceAsMap();
-                ResultHitJsonSW r = new ResultHitJsonSW(map, entitys, hit.getScore());
-                results.add(r);
-            }
-
-            client.close();
-            return results;
-
-        } catch (Exception e) {
-            logger.error("failed to put search. ", e);
-            return null;
-        }
-    }
-
-    /*
-    GET ibm3s/_search
-{
-    "from" : 0, "size" : 5,
-    "query": {
-      "bool": {
-          "should": [
-        {"match" : {
-            "sentence" : {
+/*
+    GET ibm3s-with-meta/_search
+    {
+        "from" : 0, "size" : 5,
+            "query": {
+        "bool": {
+            "should": [
+            {"multi_match" : {
                 "query" : "storwize_error_code_CMMVC5743E",
+                        "fields" : ["sentence"],
                 "analyzer" : "my_entity_analyzer",
-                "boost": 10
+                        "boost": 5
             }
-        }},
-        {"more_like_this" : {
-            "fields" : ["sentence"],
-            "like" : "has_url",
-            "min_term_freq" : 1,
-            "max_query_terms" : 3,
-            "analyzer" : "type"
-        }},
-        {"more_like_this" : {
-            "fields" : ["sentence"],
-            "like" : "storwize_error_code_CMMVC5743E_url",
-            "min_term_freq" : 1,
-            "max_query_terms" : 3,
-            "analyzer" : "my_entity_analyzer",
-            "boost": 1
-        }}
+            },
+            {"more_like_this" : {
+                "fields" : ["title", "sentence", "description"],
+                "like" : "has_url",
+                        "min_term_freq" : 1,
+                        "max_query_terms" : 12,
+                        "analyzer" : "type"
+            }},
+            {"more_like_this" : {
+                "fields" : ["title", "sentence", "description"],
+                "like" : "storwize_error_code_CMMVC5743E_url",
+                        "min_term_freq" : 1,
+                        "max_query_terms" : 12,
+                        "analyzer" : "my_entity_analyzer",
+                        "boost": 1
+            }}
         ],
-          "minimum_should_match" : "50%"
-      }
+            "minimum_should_match" : "50%"
+        }
     },
-    "sort" : "_score"
-}
-    */
-
-    public List<ResultHitJsonSW> searchEntitiesMixQuery(List<String> entities) {
+        "sort" : "_score"
+    }
+*/
+    public List<ResultHitJsonSWM> searchEntitiesMixQuery(List<String> entities) {
         try {
-            List<ResultHitJsonSW> results = new ArrayList<>();
+            List<ResultHitJsonSWM> results = new ArrayList<>();
             TransportClient client = getClient();
 
             String entityAnalyzer = "my_entity_analyzer";
@@ -201,7 +146,7 @@ public class ESEngineSW {
 
             for (SearchHit hit : response.getHits()) {
                 Map map = hit.getSourceAsMap();
-                ResultHitJsonSW r = new ResultHitJsonSW(map, entities, hit.getScore());
+                ResultHitJsonSWM r = new ResultHitJsonSWM(map, entities, hit.getScore());
                 results.add(r);
             }
 
@@ -214,60 +159,11 @@ public class ESEngineSW {
         }
     }
 
-       /*"query" : {
-      "bool": {
-          "must": [
-            {"match_phrase" : {
-                "sentence" : {"query" : "audit_log_file",
-                "analyzer" : "my_entity_analyzer"}
-              }},
-              {"match_phrase" : {
-                "sentence" : {
-                "query" : "is_specified",
-                "analyzer" : "my_entity_analyzer"}
-              }}
-          ]
-      }
-  }*/
-    public List<ResultHitJsonSW> searchEntitiesMatchPhrase(List<String> entitys) {
-        try {
-            List<ResultHitJsonSW> results = new ArrayList<>();
-            TransportClient client = getClient();
-
-            String entityAnalyzer = "my_entity_analyzer";
-            String default_field = "sentence";
-
-            BoolQueryBuilder qb = QueryBuilders.boolQuery();
-            for (String e : entitys) {
-                qb = qb.must(QueryBuilders.matchPhraseQuery(default_field, e).analyzer(entityAnalyzer));
-            }
-
-            SearchResponse response = client.prepareSearch(index)
-                    .setTypes("document")
-                    .setSearchType(SearchType.QUERY_THEN_FETCH)
-                    .setQuery(qb)
-                    .execute().actionGet();
-
-            for (SearchHit hit : response.getHits()) {
-                Map map = hit.getSourceAsMap();
-                ResultHitJsonSW r = new ResultHitJsonSW(map, entitys, hit.getScore());
-                results.add(r);
-            }
-
-            client.close();
-            return results;
-
-        } catch (Exception e) {
-            logger.error("failed to put search. ", e);
-            return null;
-        }
-    }
-
-    public void saveResult(List<ResultHitJsonSW> result) {
+    public void saveResult(List<ResultHitJsonSWM> result) {
         try {
             List<String> jsonStrs = new ArrayList();
             ObjectMapper mapper = new ObjectMapper();
-            for (ResultHitJsonSW r : result) {
+            for (ResultHitJsonSWM r : result) {
                 jsonStrs.add(mapper.writeValueAsString(r));
             }
 

@@ -1,14 +1,15 @@
 package com.esutil;
 
 import jdk.nashorn.internal.runtime.regexp.joni.Regex;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.FileWriter;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -55,9 +56,41 @@ public class OWL2NT {
 
     }
 
-    public List<List<String>> parseEntities() {
+//    public List<List<String>> parseEntities() {
+//
+//        List<List<String>> entityList = new ArrayList<>();
+//        try {
+//            ClassPathResource resource = new ClassPathResource("ibm_kg.nt");
+//            InputStream in = resource.getInputStream();
+//
+//            if (in == null) {
+//                System.out.println("file not found.");
+//            }
+//
+//            String content = IOUtils.toString(in, "UTF-8");
+//            String [] tripples = content.split(" .\n");
+//
+//            for (int i = 0; i < tripples.length; i++) {
+//                String tri = tripples[i].trim();
+//                String [] entities = tri.split(" ");
+//                List<String> oneTri = new ArrayList<>();
+//                for (int j = 0; j < entities.length; j++) {
+//                    String entity = trimEntity(entities[j]);
+//                    oneTri.add(entity);
+//                }
+//                entityList.add(oneTri);
+//            }
+//
+//        } catch (Exception e) {
+//            System.out.println("failed to read file to model.");
+//
+//        }
+//        return entityList;
+//    }
 
+    public List<List<String>> parseEntities() {
         List<List<String>> entityList = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
         try {
             ClassPathResource resource = new ClassPathResource("ibm_kg.nt");
             InputStream in = resource.getInputStream();
@@ -67,23 +100,32 @@ public class OWL2NT {
             }
 
             String content = IOUtils.toString(in, "UTF-8");
-            String [] tripples = content.split(" .\n");
 
-            for (int i = 0; i < tripples.length; i++) {
-                String tri = tripples[i].trim();
-                String [] entities = tri.split(" ");
-                List<String> oneTri = new ArrayList<>();
-                for (int j = 0; j < entities.length; j++) {
-                    String entity = trimEntity(entities[j]);
-                    oneTri.add(entity);
+            List<String> rows = new ArrayList<String>(Arrays.asList(content.split(" .\n")));
+
+            for (int i = 0; i < rows.size(); i++) {
+                String tmptriple = rows.get(i).replace("> \"", ">LETSPLIT\"");
+                tmptriple = tmptriple.replace("> <", ">LETSPLIT<");
+                tmptriple = tmptriple.replace("\" <", "\"LETSPLIT<");
+                tmptriple = tmptriple.replace("\" \"", "\"LETSPLIT\"");
+                tmptriple = tmptriple.replace(" <http", "LETSPLIT<http");
+                tmptriple = tmptriple.replace("> _:", ">LETSPLIT<");
+                String[] triple = tmptriple.split("LETSPLIT");
+                if (triple.length == 3) {
+                    List<String> tri = new ArrayList<>();
+                    for (int j = 0; j < 3; j++) {
+                        tri.add(trimEntity(triple[j]));
+                    }
+                    entityList.add(tri);
+                } else {
+                    errors.add(String.valueOf(i) + " " + rows.get(i));
                 }
-                entityList.add(oneTri);
             }
-
         } catch (Exception e) {
-            System.out.println("failed to read file to model.");
-
+            System.out.println(e.getMessage());
         }
+
         return entityList;
     }
+
 }

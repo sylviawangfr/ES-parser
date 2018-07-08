@@ -90,4 +90,39 @@ GET ibm3s/_search
     }
 }
 
+GET ibm3s/_search
+{
+    "from" : 0, "size" : 5,
+    "query": {
+      "bool": {
+          "should": [
+        {"match" : {
+            "sentence" : {
+                "query" : "storwize_error_code_CMMVC5743E",
+                "analyzer" : "my_entity_analyzer",
+                "boost": 10
+            }
+        }},
+        {"more_like_this" : {
+            "fields" : ["sentence"],
+            "like" : "has_url",
+            "min_term_freq" : 1,
+            "max_query_terms" : 12,
+            "analyzer" : "type"
+        }},
+        {"more_like_this" : {
+            "fields" : ["sentence"],
+            "like" : "storwize_error_code_CMMVC5743E_url",
+            "min_term_freq" : 1,
+            "max_query_terms" : 12,
+            "analyzer" : "my_entity_analyzer",
+            "boost": 1
+        }}
+        ],
+          "minimum_should_match" : "50%"
+      }
+    },
+    "sort" : "_score"
+}
+
 

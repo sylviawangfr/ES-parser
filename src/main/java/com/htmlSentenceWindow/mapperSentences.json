@@ -1,0 +1,69 @@
+{
+  "mappings": {
+    "document": {
+      "properties": {
+        "fileName" : {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "my_analyzer",
+          "fielddata": true
+        },
+        "sentence": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "my_analyzer",
+          "fielddata": true
+        },
+        "number": {
+          "type": "integer",
+          "index": "true"
+        }
+      }
+    }
+  },
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "my_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase"
+          ]
+        },
+        "my_html_analyzer": {
+          "tokenizer": "keyword",
+          "char_filter": [
+            "my_char_filter"
+          ]
+        },
+        "my_stop_analyzer": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "english_stop"
+          ]
+        },
+        "my_entity_analyzer": {
+          "type":      "pattern",
+          "pattern":   "\\_|/",
+          "lowercase": true,
+          "stopwords": [ "storwize", "da"]
+        }
+      },
+      "char_filter": {
+        "my_char_filter": {
+          "type": "html_strip"
+        }
+      },
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
+        }
+      }
+    }
+  }
+}
+

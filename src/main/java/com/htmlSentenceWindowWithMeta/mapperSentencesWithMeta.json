@@ -8,6 +8,15 @@
           "analyzer": "my_analyzer",
           "fielddata": true
         },
+        "title": {
+          "type": "text"
+        },
+        "description": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "fielddata": true,
+          "analyzer": "my_analyzer"
+        },
         "sentence": {
           "type": "text",
           "term_vector": "with_positions_offsets",
@@ -28,38 +37,15 @@
           "type": "custom",
           "tokenizer": "standard",
           "filter": [
-            "lowercase"
-          ]
-        },
-        "my_html_analyzer": {
-          "tokenizer": "keyword",
-          "char_filter": [
-            "my_char_filter"
-          ]
-        },
-        "my_stop_analyzer": {
-          "type": "custom",
-          "tokenizer": "standard",
-          "filter": [
             "lowercase",
-            "english_stop"
+            "unique"
           ]
         },
         "my_entity_analyzer": {
           "type":      "pattern",
-          "pattern":   "\\_",
-          "lowercase": true
-        }
-      },
-      "char_filter": {
-        "my_char_filter": {
-          "type": "html_strip"
-        }
-      },
-      "filter": {
-        "english_stop": {
-          "type": "stop",
-          "stopwords": "_english_"
+          "pattern":   "\\_|/",
+          "lowercase": true,
+          "stopwords": [ "storwize", "da"]
         }
       }
     }

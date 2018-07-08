@@ -1,10 +1,12 @@
-package com.htmlSentenceWindow;
+package com.htmlSentenceWindowWithMeta;
 
 import java.util.List;
 import java.util.Map;
 
-public class ResultHitJsonSW {
+public class ResultHitJsonSWM {
     String fileName;
+    String title;
+    String description;
     String sentence;
     long number;
     String entity1;
@@ -12,10 +14,12 @@ public class ResultHitJsonSW {
     String entity3;
     float score;
 
-    public ResultHitJsonSW(Map<String, Object> sentenseWindow, List<String> entities, float score) {
-        fileName = sentenseWindow.get("fileName").toString();
-        sentence = sentenseWindow.get("sentence").toString();
-        number = Long.parseLong(sentenseWindow.get("number").toString());
+    public ResultHitJsonSWM(Map<String, Object> sentenseWindowWithMeta, List<String> entities, float score) {
+        fileName = (String) sentenseWindowWithMeta.get("fileName");
+        sentence = (String) sentenseWindowWithMeta.get("sentence");
+        number = Long.parseLong(sentenseWindowWithMeta.get("number").toString());
+        description = (String) sentenseWindowWithMeta.get("description");
+        title = (String) sentenseWindowWithMeta.get("title");
         this.score = score;
         if (entities.size() > 0) {
             entity1 = entities.get(0);
@@ -28,6 +32,22 @@ public class ResultHitJsonSW {
         if (entities.size() > 2) {
             entity3 = entities.get(2);
         }
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public float getScore() {

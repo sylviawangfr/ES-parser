@@ -1,5 +1,6 @@
 package com.Executables;
 
+import com.esutil.OWL2NT;
 import com.htmlSentenceWindow.ESEngineSW;
 import com.htmlSentenceWindow.ResultHitJsonSW;
 import com.htmlSentenceWindowWithMeta.ESEngineSWM;
@@ -13,12 +14,27 @@ public final class SearchEngine {
 
 
     public static void main(String[] args) {
+        OWL2NT converter = new OWL2NT();
+        List<List<String>> tripples = converter.parseEntitiesObjectOnly();
+
         ESEngineSWM esEngine = new ESEngineSWM();
-        //<http://www.semanticweb.org/watson/ontologies/2017/1/it_kg_version1#da_component_php>
-        //<http://www.semanticweb.org/watson/ontologies/2017/1/it_kg_version1#has_task>
-        //<http://www.semanticweb.org/watson/ontologies/2017/1/it_kg_version1#da_task_ibm_digital_analytics_server_side_plug_in_tag_api_for_php> .
-        //List<String> entities = Arrays.asList("component_php", "", "task_ibm_digital_analytics_server_side_plug_in_tag_api_for_php");
-        //List<ResultHitJsonSWM> matchPhrase = esEngine.searchEntitiesMatchPhrase(entities);
-        //List<ResultHitJsonSWM> matchString = esEngine.searchEntitiesMixQuery(entities);
+        esEngine = esEngine.withResultIndex("3smatchobjectonly");
+        int i = 1;
+        for (List<String> tri : tripples) {
+            List<ResultHitJsonSWM> matchString = esEngine.searchEntitiesMixQuery(tri);
+            if (matchString.size() > 0) {
+                esEngine.saveResult(matchString);
+                i++;
+                try {
+                    Thread.sleep(1000);
+                } catch (Exception e) {
+                    System.out.println("interrupted");
+                }
+            }
+
+            if (i > 100) {
+                break;
+            }
+        }
     }
 }

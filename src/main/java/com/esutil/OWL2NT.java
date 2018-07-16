@@ -1,16 +1,13 @@
 package com.esutil;
 
-import jdk.nashorn.internal.runtime.regexp.joni.Regex;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.springframework.core.io.ClassPathResource;
 
-import java.io.*;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.FileWriter;
+import java.io.InputStream;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,13 +28,14 @@ public class OWL2NT {
 
             String fileName = "ibm_kg.nt";
             FileWriter out = new FileWriter(fileName);
-            model.write( out, "N-TRIPLES");
+            model.write(out, "N-TRIPLES");
             out.close();
             model.write(System.out, "N-TRIPLES");
         } catch (Exception e) {
             System.out.println("failed to read file to model.");
         }
     }
+
     private String trimEntity(String entityOrigin) {
         String regex = "(?<=#)(.*)(?=>)";
 
@@ -45,8 +43,7 @@ public class OWL2NT {
         Matcher m = p.matcher(entityOrigin);
 
         // if we find a match, get the group
-        if (m.find())
-        {
+        if (m.find()) {
             // we're only looking for one group, so get it
             String theGroup = m.group();
             return theGroup;
@@ -88,7 +85,7 @@ public class OWL2NT {
 //        return entityList;
 //    }
 
-    public List<List<String>> parseEntities() {
+    public List<List<String>> splitEntities() {
         List<List<String>> entityList = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         try {
@@ -112,10 +109,7 @@ public class OWL2NT {
                 tmptriple = tmptriple.replace("> _:", ">LETSPLIT<");
                 String[] triple = tmptriple.split("LETSPLIT");
                 if (triple.length == 3) {
-                    List<String> tri = new ArrayList<>();
-                    for (int j = 0; j < 3; j++) {
-                        tri.add(trimEntity(triple[j]));
-                    }
+                    List<String> tri = Arrays.asList(triple);
                     entityList.add(tri);
                 } else {
                     errors.add(String.valueOf(i) + " " + rows.get(i));
@@ -124,8 +118,49 @@ public class OWL2NT {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-
         return entityList;
+    }
+
+    public List<List<String>> parseEntities() {
+        List<List<String>> entityList = splitEntities();
+        List<List<String>> parsedEntities = new ArrayList<>();
+        for (List<String> row : entityList) {
+            List<String> tri = new ArrayList<>();
+            for (String en : row) {
+                tri.add(trimEntity(en)); //trim all entities
+            }
+            parsedEntities.add(tri);
+        }
+        return parsedEntities;
+    }
+
+    public List<List<String>> parseEntitiesObjectOnly() {
+        List<List<String>> entityList = splitEntities();
+        List<List<String>> parsedEntities = new ArrayList<>();
+        for (List<String> row : entityList) {
+            if (!row.get(2).startsWith("\"")) {
+                List<String> tri = new ArrayList<>();
+                for (String en : row) {
+                    tri.add(trimEntity(en));
+                }
+                entityList.add(tri);
+            }
+        }
+        return parsedEntities;
+    }
+
+    public Map<String, Integer> getAllLabels() {
+        Map<String, Integer> labelCount = new HashMap<>();
+        List<List<String>> entityList = splitEntities();
+        for (List<String> row : entityList) {
+            String label = trimEntity(row.get(1));
+            if (!labelCount.containsKey(label)) {
+                labelCount.put(label, 1);
+            } else {
+                labelCount.replace(label, labelCount.get(label) + 1);
+            }
+        }
+        return labelCount;
     }
 
 }

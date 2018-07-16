@@ -35,6 +35,11 @@ public class ESEngineSWM {
         return this;
     }
 
+    public ESEngineSWM withResultIndex(String newIndex) {
+        this.resultIndex = newIndex;
+        return this;
+    }
+
     public void tryQuery() {
         try {
             // on startup
@@ -142,6 +147,7 @@ public class ESEngineSWM {
                     .setFrom(0)
                     .setSize(10)
                     .setQuery(qb)
+                    .addSort("_score", SortOrder.DESC)
                     .execute().actionGet();
 
             for (SearchHit hit : response.getHits()) {

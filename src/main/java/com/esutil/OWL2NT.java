@@ -138,12 +138,12 @@ public class OWL2NT {
         List<List<String>> entityList = splitEntities();
         List<List<String>> parsedEntities = new ArrayList<>();
         for (List<String> row : entityList) {
-            if (!row.get(2).startsWith("\"")) {
+            if (!row.get(2).startsWith("\"") && !row.get(1).endsWith("#type>") && !row.get(1).endsWith("#has_url>")) {
                 List<String> tri = new ArrayList<>();
                 for (String en : row) {
                     tri.add(trimEntity(en));
                 }
-                entityList.add(tri);
+                parsedEntities.add(tri);
             }
         }
         return parsedEntities;

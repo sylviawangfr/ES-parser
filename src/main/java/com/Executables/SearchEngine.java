@@ -32,7 +32,7 @@ public final class SearchEngine {
                 }
             }
 
-            if (i > 100) {
+            if (i > 500) {
                 break;
             }
         }

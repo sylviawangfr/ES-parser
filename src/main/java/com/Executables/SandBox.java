@@ -21,7 +21,7 @@ public final class SandBox {
     public static void main(String[] args) {
 
         ESEngineSWM esEngine = new ESEngineSWM();
-        esEngine.deleteTmpResult();
+        //esEngine.deleteTmpResult();
 //        OWL2NT converter = new OWL2NT();
 //        Map<String, Integer> labels = converter.getAllLabels();
 //        Set<String> keys = labels.keySet();

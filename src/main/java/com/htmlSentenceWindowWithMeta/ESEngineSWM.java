@@ -10,7 +10,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.elasticsearch.index.reindex.DeleteByQueryAction;
@@ -25,7 +24,6 @@ import org.springframework.util.StringUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +33,11 @@ public class ESEngineSWM {
     String originIndex = "ibm3s-with-meta";
     //String resultIndex = "ibm3s-with-meta-result";
     String tmpResultIndex = "ibm3s-tmp-result";
+    //String tmpResultIndex = "ibm3s-with-meta-result";
+    String tmpTagIndex = "ibm3s-tmp-tag";
     String resultIndex = "ibm3s-with-tag-result";
 
-    TransportClient client = null;
+    //TransportClient client = null;
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
 
@@ -83,6 +83,10 @@ public class ESEngineSWM {
 
     public TransportClient getClient() {
         try {
+//            if (client != null) {
+//                return client;
+//            }
+
             Settings settings = Settings.builder().put("cluster.name", "elasticsearch_sylvia.wang").build();
             TransportClient client = new PreBuiltTransportClient(settings)
                     .addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
@@ -93,11 +97,11 @@ public class ESEngineSWM {
         }
     }
 
-    public void closeClient() {
-        if (client != null) {
-            client.close();
-        }
-    }
+//    public void closeClient() {
+//        if (client != null) {
+//            client.close();
+//        }
+//    }
 /*
     GET ibm3s-with-meta/_search
     {
@@ -175,16 +179,13 @@ public class ESEngineSWM {
 
         } catch (Exception e) {
             logger.error("failed to put search. ", e);
-
             return null;
-        } finally {
-            closeClient();
         }
     }
 
-    public long deleteTmpResult() {
+    public long deleteTmpResult(TransportClient client) {
         try {
-            BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(getClient())
+            BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
                     .filter(QueryBuilders.matchAllQuery())
                     .source(tmpResultIndex)
                     .get();
@@ -192,50 +193,24 @@ public class ESEngineSWM {
             return deleted;
         } catch (Exception e) {
             logger.error(e);
-
             return 0;
-        } finally {
-            closeClient();
         }
     }
-
 /*
-    GET ibm3s-with-meta/_search
-    {
-        "query": {
-        "bool": {
-            "must": [
-            {"term": {"fileName": "bb1gt_t_installservraid.html"}},
-            {"term": {"number": 23 }},
-            {"multi_match" : {
-                "query" : "cache_battery_warning",
-                        "fields" : ["sentence"],
-                "analyzer" : "my_entity_analyzer"
-            }
-            }
-      ]
-        }
-    },
-        "highlight" : {
-        "pre_tags" : ["<head>"],
-        "post_tags" : ["</head>"],
-        "type" : "plain",
-                "number_of_fragments" : 0,
-                "fragment_size" : 150,
-                "fields" : {
-            "sentence" : { }
-        }
-    }
-    }
-     */
-    public String tagHeadEntity(ResultHitJsonSWM sw) {
-        try {
-            TransportClient client = getClient();
 
+     */
+    public String tagHeadEntity(TransportClient client, ResultHitJsonSWM sw) {
+        try {
             String entityAnalyzer = "my_entity_analyzer";
             String index = tmpResultIndex;
 
-            MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.entity1, "sentence").analyzer(entityAnalyzer);
+            BoolQueryBuilder qb = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchQuery("fileName", sw.fileName).analyzer("my_analyzer"))
+                    .must(QueryBuilders.termQuery("number", sw.number))
+                    .must(QueryBuilders.multiMatchQuery(sw.entity1, "sentence").analyzer(entityAnalyzer));
+
+            //MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.entity1, "sentence").analyzer(entityAnalyzer);
+
             HighlightBuilder hb = new HighlightBuilder()
                     .preTags("<head>")
                     .postTags("</head>")
@@ -266,6 +241,8 @@ public class ESEngineSWM {
                 }
 
             }
+
+
             if (taggedSW.size() > 0) {
                 return taggedSW.get(0);
             } else {
@@ -275,8 +252,6 @@ public class ESEngineSWM {
         } catch (Exception e) {
             logger.error("failed to put search. ", e);
             return null;
-        } finally {
-            closeClient();
         }
     }
 
@@ -288,13 +263,18 @@ public class ESEngineSWM {
         }
     }
 
-    public String tagTailEntity(ResultHitJsonSWM sw) {
+    public String tagTailEntity(TransportClient client, ResultHitJsonSWM sw) {
         try {
-            TransportClient client = getClient();
 
             String entityAnalyzer = "my_entity_analyzer";
 
-            MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.entity3, "sentence").analyzer(entityAnalyzer);
+            //MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.entity3, "sentence").analyzer(entityAnalyzer);
+
+            BoolQueryBuilder qb = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchQuery("fileName", sw.fileName).analyzer("my_analyzer"))
+                    .must(QueryBuilders.termQuery("number", sw.number))
+                    .must(QueryBuilders.multiMatchQuery(sw.entity3, "sentence").analyzer(entityAnalyzer));
+
             HighlightBuilder hb = new HighlightBuilder()
                     .preTags("<tail>")
                     .postTags("</tail>")
@@ -304,7 +284,7 @@ public class ESEngineSWM {
                     .fragmentSize(200)
                     .field("sentence");
 
-            SearchResponse response = client.prepareSearch(tmpResultIndex)
+            SearchResponse response = client.prepareSearch(tmpTagIndex)
                     .setTypes("document")
                     .setSearchType(SearchType.QUERY_THEN_FETCH)
                     .setFrom(0)
@@ -333,8 +313,6 @@ public class ESEngineSWM {
         } catch (Exception e) {
             logger.error("failed to put search. ", e);
             return null;
-        } finally {
-            closeClient();
         }
     }
 
@@ -349,43 +327,85 @@ public class ESEngineSWM {
         return merged;
     }
 
-    public void searchAndTagAndSave(List<String> entities) {
-        List<ResultHitJsonSWM> sws = searchEntitiesMixQuery(entities);
-        for (ResultHitJsonSWM sw :sws) {
-            saveTmpResult(sw);
-            sleepMillis(1000);
-            ResultHitJsonSWM swTag = new ResultHitJsonSWM(sw);
-            String taggedHeadSW = tagHeadEntity(sw);
-            if (StringUtils.hasText(taggedHeadSW)) {
-                taggedHeadSW = mergeTags(taggedHeadSW);
-                swTag.setSentence(taggedHeadSW);
-                deleteTmpResult();
-                sleepMillis(500);
-                saveTmpResult(swTag);
-                sleepMillis(1000);
-            }
+    public List<ResultHitJsonSWM> getSWByEntities(TransportClient client, List<String> entities) {
+        try {
+            List<ResultHitJsonSWM> results = new ArrayList<>();
 
-            String taggedTailSW = tagTailEntity(swTag);
-            if (StringUtils.hasText(taggedTailSW)) {
-                taggedTailSW = mergeTags(taggedTailSW);
-                swTag.setSentence(taggedTailSW);
+            String analyzer = "my_analyzer";
+
+            //MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.entity3, "sentence").analyzer(entityAnalyzer);
+
+            BoolQueryBuilder qb = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchQuery("entity1", entities.get(0)).analyzer(analyzer))
+                    .must(QueryBuilders.matchQuery("entity2", entities.get(1)).analyzer(analyzer))
+                    .must(QueryBuilders.matchQuery("entity3", entities.get(2)).analyzer(analyzer));
+
+
+            SearchResponse response = client.prepareSearch(tmpResultIndex)
+                    .setTypes("document")
+                    .setSearchType(SearchType.QUERY_THEN_FETCH)
+                    .setFrom(0)
+                    .setSize(10)
+                    .setQuery(qb)
+                    .execute().actionGet();
+
+            List<String> taggedSW = new ArrayList<>();
+            for (SearchHit hit : response.getHits()) {
+                Map map = hit.getSourceAsMap();
+                ResultHitJsonSWM r = new ResultHitJsonSWM(map, entities, hit.getScore());
+                results.add(r);
             }
-            deleteTmpResult();
-            sleepMillis(500);
-            if (!sw.sentence.equals(swTag.sentence)) {
-                saveResult(swTag);
+            return results;
+
+        } catch (Exception e) {
+            logger.error("failed to put find sw by triple. ", e);
+            return null;
+        }
+    }
+
+    public void searchAndTagAndSave(List<String> entities) {
+        //List<ResultHitJsonSWM> sws = searchEntitiesMixQuery(entities);
+
+        TransportClient client = getClient();
+
+        try {
+            List<ResultHitJsonSWM> sws = getSWByEntities(client, entities);
+            for (ResultHitJsonSWM sw : sws) {
+                ResultHitJsonSWM swTag = new ResultHitJsonSWM(sw);
+                String taggedHeadSW = tagHeadEntity(client, sw);
+                if (StringUtils.hasText(taggedHeadSW)) {
+                    taggedHeadSW = mergeTags(taggedHeadSW);
+                    swTag.setSentence(taggedHeadSW);
+                    sleepMillis(500);
+                    saveTmpTagResult(swTag);
+                    sleepMillis(1000);
+                }
+
+                String taggedTailSW = tagTailEntity(client, swTag);
+                if (StringUtils.hasText(taggedTailSW)) {
+                    taggedTailSW = mergeTags(taggedTailSW);
+                    swTag.setSentence(taggedTailSW);
+                }
+                sleepMillis(500);
+                if (!sw.sentence.equals(swTag.sentence)) {
+                    saveResult(swTag);
+                }
             }
+        } catch (Exception e) {
+            logger.error(e);
+        } finally {
+            client.close();
         }
 
     }
 
 
-    public void saveTmpResult(ResultHitJsonSWM sw) {
+    public void saveTmpTagResult(ResultHitJsonSWM sw) {
         try {
             List<String> jsonStrs = new ArrayList();
             ObjectMapper mapper = new ObjectMapper();
             jsonStrs.add(mapper.writeValueAsString(sw));
-            ESSetter esSetter = new ESSetter(tmpResultIndex);
+            ESSetter esSetter = new ESSetter(tmpTagIndex);
             esSetter.putDocBulk(jsonStrs);
         } catch (Exception e) {
             logger.error("failed to save tmp sw", e);
@@ -414,7 +434,7 @@ public class ESEngineSWM {
                 jsonStrs.add(mapper.writeValueAsString(r));
             }
 
-            ESSetter esSetter = new ESSetter(resultIndex);
+            ESSetter esSetter = new ESSetter(tmpResultIndex);
             esSetter.putDocBulk(jsonStrs);
         } catch (Exception e) {
             logger.error("failed to save bulk result: ", e);

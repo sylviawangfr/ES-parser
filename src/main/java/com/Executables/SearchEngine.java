@@ -18,22 +18,24 @@ public final class SearchEngine {
         List<List<String>> tripples = converter.parseEntitiesObjectOnly();
 
         ESEngineSWM esEngine = new ESEngineSWM();
-        esEngine = esEngine.withResultIndex("3smatchobjectonly");
-        int i = 1;
+
         for (List<String> tri : tripples) {
             List<ResultHitJsonSWM> matchString = esEngine.searchEntitiesMixQuery(tri);
             if (matchString.size() > 0) {
-                esEngine.saveResult(matchString);
-                i++;
+
+//            esEngine.saveResult(matchString);
+//            List<String> tri = new ArrayList<>();
+//            tri.add("da_component_websphere_portal_integration");
+//            tri.add("has_task");
+//            tri.add("da_task_websphere_portal_integration");
+
+                esEngine.searchAndTagAndSave(tri);
+
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 } catch (Exception e) {
                     System.out.println("interrupted");
                 }
-            }
-
-            if (i > 500) {
-                break;
             }
         }
     }

@@ -37,6 +37,8 @@ public class ESEngineSWM {
     String tmpResultIndex = "ibm3s-tmp-result";
     String resultIndex = "ibm3s-with-tag-result";
 
+    TransportClient client = null;
+
     private Logger logger = LogManager.getLogger(ESSetter.class);
 
     public ESEngineSWM withIndex(String newIndex) {
@@ -73,8 +75,6 @@ public class ESEngineSWM {
                 }
                 ++count;
             }
-
-            client.close();
         } catch (Exception e) {
             logger.error("failed to put search. ", e);
             return;
@@ -90,6 +90,12 @@ public class ESEngineSWM {
         } catch (UnknownHostException e) {
             logger.error("failed to find host. ", e);
             return null;
+        }
+    }
+
+    public void closeClient() {
+        if (client != null) {
+            client.close();
         }
     }
 /*
@@ -165,24 +171,32 @@ public class ESEngineSWM {
                 ResultHitJsonSWM r = new ResultHitJsonSWM(map, entities, hit.getScore());
                 results.add(r);
             }
-
-            client.close();
             return results;
 
         } catch (Exception e) {
             logger.error("failed to put search. ", e);
+
             return null;
+        } finally {
+            closeClient();
         }
     }
 
     public long deleteTmpResult() {
-        List<ResultHitJsonSWM> results = new ArrayList<>();
-        TransportClient client = getClient();
-        BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
-                .filter(QueryBuilders.matchAllQuery())
-                .get();
-        long deleted = response.getDeleted();
-        return deleted;
+        try {
+            BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(getClient())
+                    .filter(QueryBuilders.matchAllQuery())
+                    .source(tmpResultIndex)
+                    .get();
+            long deleted = response.getDeleted();
+            return deleted;
+        } catch (Exception e) {
+            logger.error(e);
+
+            return 0;
+        } finally {
+            closeClient();
+        }
     }
 
 /*
@@ -216,18 +230,12 @@ public class ESEngineSWM {
      */
     public String tagHeadEntity(ResultHitJsonSWM sw) {
         try {
-            List<ResultHitJsonSWM> results = new ArrayList<>();
             TransportClient client = getClient();
 
             String entityAnalyzer = "my_entity_analyzer";
-            String default_field = "sentence";
             String index = tmpResultIndex;
 
-            BoolQueryBuilder qb = QueryBuilders.boolQuery();
-                qb = qb.must(QueryBuilders.termQuery("fileName", sw.fileName));
-                qb = qb.must(QueryBuilders.termQuery("number", sw.number));
-                qb = qb.must(QueryBuilders.multiMatchQuery(sw.entity1, default_field).analyzer(entityAnalyzer));
-
+            MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.entity1, "sentence").analyzer(entityAnalyzer);
             HighlightBuilder hb = new HighlightBuilder()
                     .preTags("<head>")
                     .postTags("</head>")
@@ -250,10 +258,7 @@ public class ESEngineSWM {
             for (SearchHit hit : response.getHits()) {
                 Map<String, HighlightField> esHighlights = hit.getHighlightFields();
                 if (!esHighlights.isEmpty()) {
-                    Map<String, List<String>> fields = new HashMap<>();
                     for (Map.Entry<String, HighlightField> entry : esHighlights.entrySet()) {
-                        String field = entry.getKey();
-
                         for (Text fragment : entry.getValue().getFragments()) {
                             taggedSW.add(fragment.toString());
                         }
@@ -261,18 +266,76 @@ public class ESEngineSWM {
                 }
 
             }
-
-            client.close();
-            return taggedSW.toString();
+            if (taggedSW.size() > 0) {
+                return taggedSW.get(0);
+            } else {
+                return "";
+            }
 
         } catch (Exception e) {
             logger.error("failed to put search. ", e);
             return null;
+        } finally {
+            closeClient();
+        }
+    }
+
+    public void sleepMillis(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (Exception e) {
+            System.out.println("interrupted");
         }
     }
 
     public String tagTailEntity(ResultHitJsonSWM sw) {
-        return "";
+        try {
+            TransportClient client = getClient();
+
+            String entityAnalyzer = "my_entity_analyzer";
+
+            MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.entity3, "sentence").analyzer(entityAnalyzer);
+            HighlightBuilder hb = new HighlightBuilder()
+                    .preTags("<tail>")
+                    .postTags("</tail>")
+                    .highlighterType("fvh")
+                    .boundaryScannerType("sentence")
+                    .numOfFragments(0)
+                    .fragmentSize(200)
+                    .field("sentence");
+
+            SearchResponse response = client.prepareSearch(tmpResultIndex)
+                    .setTypes("document")
+                    .setSearchType(SearchType.QUERY_THEN_FETCH)
+                    .setFrom(0)
+                    .setSize(1)
+                    .setQuery(qb)
+                    .highlighter(hb)
+                    .execute().actionGet();
+
+            List<String> taggedSW = new ArrayList<>();
+            for (SearchHit hit : response.getHits()) {
+                Map<String, HighlightField> esHighlights = hit.getHighlightFields();
+                if (!esHighlights.isEmpty()) {
+                    for (Map.Entry<String, HighlightField> entry : esHighlights.entrySet()) {
+                        for (Text fragment : entry.getValue().getFragments()) {
+                            taggedSW.add(fragment.toString());
+                        }
+                    }
+                }
+            }
+            if (taggedSW.size() > 0) {
+                return taggedSW.get(0);
+            } else {
+                return "";
+            }
+
+        } catch (Exception e) {
+            logger.error("failed to put search. ", e);
+            return null;
+        } finally {
+            closeClient();
+        }
     }
 
     public String mergeTags(String taggedSW) {
@@ -280,6 +343,9 @@ public class ESEngineSWM {
                 .replace("</head><head>", "")
                 .replace("</tail> <tail>", " ")
                 .replace("</tail><tail>", "");
+        if (!StringUtils.hasText(merged)) {
+            int i =0;
+        }
         return merged;
     }
 
@@ -287,24 +353,29 @@ public class ESEngineSWM {
         List<ResultHitJsonSWM> sws = searchEntitiesMixQuery(entities);
         for (ResultHitJsonSWM sw :sws) {
             saveTmpResult(sw);
+            sleepMillis(1000);
             ResultHitJsonSWM swTag = new ResultHitJsonSWM(sw);
             String taggedHeadSW = tagHeadEntity(sw);
             if (StringUtils.hasText(taggedHeadSW)) {
                 taggedHeadSW = mergeTags(taggedHeadSW);
                 swTag.setSentence(taggedHeadSW);
                 deleteTmpResult();
+                sleepMillis(500);
                 saveTmpResult(swTag);
+                sleepMillis(1000);
             }
 
-            String taggedTailSW = tagHeadEntity(swTag);
+            String taggedTailSW = tagTailEntity(swTag);
             if (StringUtils.hasText(taggedTailSW)) {
-                taggedTailSW = mergeTags(taggedHeadSW);
+                taggedTailSW = mergeTags(taggedTailSW);
                 swTag.setSentence(taggedTailSW);
             }
             deleteTmpResult();
-            saveResult(swTag);
+            sleepMillis(500);
+            if (!sw.sentence.equals(swTag.sentence)) {
+                saveResult(swTag);
+            }
         }
-
 
     }
 

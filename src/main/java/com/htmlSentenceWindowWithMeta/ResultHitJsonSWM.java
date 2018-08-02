@@ -34,6 +34,18 @@ public class ResultHitJsonSWM {
         }
     }
 
+    public ResultHitJsonSWM(ResultHitJsonSWM sw) {
+        fileName = sw.fileName;
+        sentence = sw.sentence;
+        number = sw.number;
+        description = sw.description;
+        title = sw.title;
+        this.score = sw.score;
+        entity1 = sw.entity1;
+        entity2 = sw.entity2;
+        entity3 = sw.entity3;
+    }
+
     public String getTitle() {
         return title;
     }

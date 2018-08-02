@@ -2,6 +2,7 @@ package com.Executables;
 
 import com.esutil.OWL2NT;
 import com.esutil.SentenseSpliter;
+import com.esutil.ToOpenKE;
 import com.htmlSentenceWindow.ESEngineSW;
 import com.htmlSentenceWindow.ResultHitJsonSW;
 import com.htmlSentenceWindowWithMeta.ESEngineSWM;
@@ -20,11 +21,15 @@ public final class SandBox {
     public static void main(String[] args) {
 
         OWL2NT converter = new OWL2NT();
-        Map<String, Integer> labels = converter.getAllLabels();
-        Set<String> keys = labels.keySet();
-        for (String l : keys) {
-            System.out.println(l + " " + labels.get(l) + "\n");
-        }
+//        Map<String, Integer> labels = converter.getAllLabels();
+//        Set<String> keys = labels.keySet();
+//        for (String l : keys) {
+//            System.out.println(l + " " + labels.get(l) + "\n");
+//        }
+
+        ToOpenKE toOpenKE = new ToOpenKE();
+        toOpenKE.convert(converter.parseEntitiesObjectOnly());
+
     }
 
 

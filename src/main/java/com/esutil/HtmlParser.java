@@ -1,26 +1,16 @@
 package com.esutil;
 
-import com.ValueTypes.Link;
-import com.ValueTypes.MetaData;
-import com.ValueTypes.RelatedLinks;
-import com.ValueTypes.Sentence;
-import com.esutil.PropertyReaderUtil;
-import com.esutil.SentenseSpliter;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.htmlNestedObjects.Link;
+import com.htmlNestedObjects.MetaData;
+import com.htmlNestedObjects.RelatedLinks;
+import com.htmlNestedObjects.Sentence;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 

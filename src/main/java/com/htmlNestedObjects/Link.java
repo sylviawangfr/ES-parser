@@ -1,4 +1,4 @@
-package com.ValueTypes;
+package com.htmlNestedObjects;
 
 public class Link {
     String link_text;

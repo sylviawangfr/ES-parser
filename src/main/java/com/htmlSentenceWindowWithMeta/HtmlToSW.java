@@ -1,8 +1,8 @@
 package com.htmlSentenceWindowWithMeta;
 
 import com.ValueTypes.HtmlConvertor;
-import com.ValueTypes.MetaData;
-import com.ValueTypes.Sentence;
+import com.htmlNestedObjects.MetaData;
+import com.htmlNestedObjects.Sentence;
 import com.esutil.ESSetter;
 import com.esutil.HtmlParser;
 import com.esutil.PropertyReaderUtil;
@@ -21,13 +21,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class HtmlPreHandleSWM implements HtmlConvertor {
+public class HtmlToSW implements HtmlConvertor {
 
-    private Logger logger = LogManager.getLogger(HtmlPreHandleSWM.class);
+    private Logger logger = LogManager.getLogger(HtmlToSW.class);
 
     String index = "ibm3s-with-meta";
 
-    public HtmlPreHandleSWM withIndex(String newIndex) {
+    public HtmlToSW withIndex(String newIndex) {
         this.index = newIndex;
         return this;
     }

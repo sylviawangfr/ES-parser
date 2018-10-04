@@ -1,14 +1,13 @@
 package com.htmlSentenceWindow;
 
 import com.ValueTypes.HtmlConvertor;
-import com.ValueTypes.Sentence;
+import com.htmlNestedObjects.Sentence;
 import com.esutil.ESSetter;
 import com.esutil.PropertyReaderUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.esutil.HtmlParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 
 import java.io.BufferedWriter;

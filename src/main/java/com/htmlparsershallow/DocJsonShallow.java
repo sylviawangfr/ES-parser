@@ -1,7 +1,7 @@
 package com.htmlparsershallow;
 
-import com.ValueTypes.MetaData;
-import com.ValueTypes.RelatedLinks;
+import com.htmlNestedObjects.MetaData;
+import com.htmlNestedObjects.RelatedLinks;
 
 public class DocJsonShallow {
     String [] sentence;

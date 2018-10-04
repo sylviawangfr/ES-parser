@@ -1,8 +1,5 @@
 package com.htmlNestedObjects;
 
-import com.htmlNestedObjects.EntityMatch;
-import com.ValueTypes.Sentence;
-import com.htmlNestedObjects.SentenseWindow;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.lucene.search.join.ScoreMode;
@@ -13,7 +10,6 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.InnerHitBuilder;
-import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
@@ -22,7 +18,6 @@ import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -125,7 +120,7 @@ public class ESEngineNestedObject {
         }
     }
 
-    public SentenseWindow getSentenceWindow(EntityMatch entityMatch) {
+    public SentenseWindowNested getSentenceWindow(EntityMatch entityMatch) {
         try {
             // on startup
             TransportClient client = getClient();
@@ -153,7 +148,7 @@ public class ESEngineNestedObject {
                                     .setSize(1)))
                     .execute().actionGet();
 
-           SentenseWindow matchHit = new SentenseWindow();
+           SentenseWindowNested matchHit = new SentenseWindowNested();
            List<Sentence>  sentences = new ArrayList<>();
 
             for (SearchHit hit : response.getHits().getHits()) {
@@ -183,7 +178,7 @@ public class ESEngineNestedObject {
 
     public void searchSentenseWindow(String entity) {
         List<EntityMatch> matches1 = searchEntities(entity);
-        List<SentenseWindow> matches2 = new ArrayList<>();
+        List<SentenseWindowNested> matches2 = new ArrayList<>();
         for (EntityMatch em : matches1) {
             matches2.add(getSentenceWindow(em));
         }

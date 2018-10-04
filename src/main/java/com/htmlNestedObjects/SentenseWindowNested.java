@@ -1,8 +1,6 @@
 package com.htmlNestedObjects;
 
-import com.ValueTypes.Sentence;
-
-public class SentenseWindow {
+public class SentenseWindowNested {
 
 
     String docId;

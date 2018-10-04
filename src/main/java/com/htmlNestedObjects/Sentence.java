@@ -1,4 +1,4 @@
-package com.ValueTypes;
+package com.htmlNestedObjects;
 
 public class Sentence {
     String sentence;

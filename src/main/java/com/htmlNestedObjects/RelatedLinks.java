@@ -1,6 +1,6 @@
-package com.ValueTypes;
+package com.htmlNestedObjects;
 
-import com.ValueTypes.Link;
+import com.htmlNestedObjects.Link;
 
 public class RelatedLinks {
     Link[] parentlinks;

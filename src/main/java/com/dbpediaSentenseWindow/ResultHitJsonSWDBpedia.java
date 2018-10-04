@@ -1,12 +1,13 @@
-package com.htmlSentenceWindowWithMeta;
+package com.dbpediaSentenseWindow;
 
 import java.util.List;
 import java.util.Map;
 
-public class ResultHitJsonSWM {
-    public String fileName;
-    public String title;
-    public String description;
+public class ResultHitJsonSWDBpedia {
+
+
+    public String uri;
+    public String derivedFrom;
     public String sentence;
     public long number;
     public String head;
@@ -14,12 +15,12 @@ public class ResultHitJsonSWM {
     public String tail;
     public float score;
 
-    public ResultHitJsonSWM(Map<String, Object> sentenseWindowWithMeta, List<String> entities, float score) {
-        fileName = (String) sentenseWindowWithMeta.get("fileName");
+    public ResultHitJsonSWDBpedia(Map<String, Object> sentenseWindowWithMeta, List<String> entities, float score) {
+        uri = (String) sentenseWindowWithMeta.get("uri");
         sentence = (String) sentenseWindowWithMeta.get("sentence");
         number = Long.parseLong(sentenseWindowWithMeta.get("number").toString());
-        description = (String) sentenseWindowWithMeta.get("description");
-        title = (String) sentenseWindowWithMeta.get("title");
+        derivedFrom = (String) sentenseWindowWithMeta.get("derivedFrom");
+
         this.score = score;
         if (entities.size() > 0) {
             head = entities.get(0);
@@ -34,32 +35,52 @@ public class ResultHitJsonSWM {
         }
     }
 
-    public ResultHitJsonSWM(ResultHitJsonSWM sw) {
-        fileName = sw.fileName;
+    public ResultHitJsonSWDBpedia(DocJsonSWDBpedia sw, List<String> entities, float score) {
+        uri = sw.uri;
         sentence = sw.sentence;
         number = sw.number;
-        description = sw.description;
-        title = sw.title;
+        derivedFrom = sw.derivedFrom;
+
+        this.score = score;
+        if (entities.size() > 0) {
+            head = entities.get(0);
+        }
+
+        if (entities.size() > 1) {
+            label = entities.get(1);
+        }
+
+        if (entities.size() > 2) {
+            tail = entities.get(2);
+        }
+    }
+
+    public ResultHitJsonSWDBpedia(ResultHitJsonSWDBpedia sw) {
+        uri = sw.uri;
+        sentence = sw.sentence;
+        number = sw.number;
+        derivedFrom = sw.derivedFrom;
+
         this.score = sw.score;
         head = sw.head;
         label = sw.label;
         tail = sw.tail;
     }
 
-    public String getTitle() {
-        return title;
+    public String getUri() {
+        return uri;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
+    public void setUri(String uri) {
+        this.uri = uri;
     }
 
-    public String getDescription() {
-        return description;
+    public String getDerivedFrom() {
+        return derivedFrom;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setDerivedFrom(String derivedFrom) {
+        this.derivedFrom = derivedFrom;
     }
 
     public float getScore() {
@@ -92,13 +113,6 @@ public class ResultHitJsonSWM {
 
     public void setHead(String head) {
         this.head = head;
-    }
-    public String getFileName() {
-        return fileName;
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
     }
 
     public String getSentence() {

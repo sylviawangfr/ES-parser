@@ -88,7 +88,7 @@ public class OWL2NT {
 //        return entityList;
 //    }
 
-    public List<List<String>> splitEntities() {
+    private List<List<String>> splitEntities() {
         List<List<String>> entityList = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         try {

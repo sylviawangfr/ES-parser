@@ -1,0 +1,101 @@
+{
+  "ibm3s-with-meta": {
+    "aliases": {},
+    "mappings": {
+      "document": {
+        "properties": {
+          "description": {
+            "type": "text",
+            "term_vector": "with_positions_offsets",
+            "analyzer": "my_analyzer",
+            "fielddata": true
+          },
+          "fileName": {
+            "type": "text",
+            "term_vector": "with_positions_offsets",
+            "analyzer": "my_analyzer",
+            "fielddata": true
+          },
+          "number": {
+            "type": "integer"
+          },
+          "sentence": {
+            "type": "text",
+            "term_vector": "with_positions_offsets",
+            "analyzer": "my_analyzer",
+            "fielddata": true
+          },
+          "title": {
+            "type": "text"
+          }
+        }
+      }
+    },
+    "settings": {
+      "index": {
+        "number_of_shards": "5",
+        "provided_name": "ibm3s-with-meta",
+        "creation_date": "1531058592513",
+        "analysis": {
+          "filter": {
+            "synonym": {
+              "type": "synonym",
+              "synonyms_path": "storage-synonym/ibm-all-in-one.txt"
+            }
+          },
+          "analyzer": {
+            "my_entity_analyzer": {
+              "pattern": "\\W|_",
+              "lowercase": "true",
+              "type": "pattern",
+              "stopwords": [
+                "storwize",
+                "da",
+                "and",
+                "component",
+                "task",
+                "examples",
+                "funnel",
+                "symptom"
+              ]
+            },
+            "ibm_synonyms_analyzer": {
+              "filter": [
+                "synonym",
+                "lowercase"
+              ],
+              "type": "custom",
+              "tokenizer": "standard"
+            },
+            "entity_analyzer": {
+              "pattern": "\\W|_",
+              "lowercase": "true",
+              "type": "pattern",
+              "stopwords": [
+                "storwize",
+                "da",
+                "and",
+                "component",
+                "task",
+                "examples"
+              ]
+            },
+            "my_analyzer": {
+              "filter": [
+                "synonym",
+                "lowercase"
+              ],
+              "type": "custom",
+              "tokenizer": "standard"
+            }
+          }
+        },
+        "number_of_replicas": "1",
+        "uuid": "XLt4KiVJSiyLmT2KCcbqzg",
+        "version": {
+          "created": "6020499"
+        }
+      }
+    }
+  }
+}

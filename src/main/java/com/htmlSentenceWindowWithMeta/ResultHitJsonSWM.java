@@ -9,9 +9,9 @@ public class ResultHitJsonSWM {
     String description;
     String sentence;
     long number;
-    String entity1;
-    String entity2;
-    String entity3;
+    String head;
+    String label;
+    String tail;
     float score;
 
     public ResultHitJsonSWM(Map<String, Object> sentenseWindowWithMeta, List<String> entities, float score) {
@@ -22,15 +22,15 @@ public class ResultHitJsonSWM {
         title = (String) sentenseWindowWithMeta.get("title");
         this.score = score;
         if (entities.size() > 0) {
-            entity1 = entities.get(0);
+            head = entities.get(0);
         }
 
         if (entities.size() > 1) {
-            entity2 = entities.get(1);
+            label = entities.get(1);
         }
 
         if (entities.size() > 2) {
-            entity3 = entities.get(2);
+            tail = entities.get(2);
         }
     }
 
@@ -41,9 +41,9 @@ public class ResultHitJsonSWM {
         description = sw.description;
         title = sw.title;
         this.score = sw.score;
-        entity1 = sw.entity1;
-        entity2 = sw.entity2;
-        entity3 = sw.entity3;
+        head = sw.head;
+        label = sw.label;
+        tail = sw.tail;
     }
 
     public String getTitle() {
@@ -70,28 +70,28 @@ public class ResultHitJsonSWM {
         this.score = score;
     }
 
-    public String getEntity2() {
-        return entity2;
+    public String getLabel() {
+        return label;
     }
 
-    public void setEntity2(String entity2) {
-        this.entity2 = entity2;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
-    public String getEntity3() {
-        return entity3;
+    public String getTail() {
+        return tail;
     }
 
-    public void setEntity3(String entity3) {
-        this.entity3 = entity3;
+    public void setTail(String tail) {
+        this.tail = tail;
     }
 
-    public String getEntity1() {
-        return entity1;
+    public String getHead() {
+        return head;
     }
 
-    public void setEntity1(String entity1) {
-        this.entity1 = entity1;
+    public void setHead(String head) {
+        this.head = head;
     }
     public String getFileName() {
         return fileName;

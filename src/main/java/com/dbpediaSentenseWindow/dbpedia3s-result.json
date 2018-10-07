@@ -1,0 +1,68 @@
+//PUT /dbpedia3s-result
+{
+  "mappings": {
+    "document": {
+      "properties": {
+        "uri": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "stop_analyzer",
+          "fielddata": true
+        },
+        "derivedFrom": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "stop_analyzer",
+          "fielddata": true
+        },
+        "number": {
+          "type": "integer"
+        },
+        "sentence": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "analyzer": "stop_analyzer",
+          "fielddata": true
+        },
+        "entityName": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "fielddata": true,
+          "analyzer": "stop_analyzer"
+        },
+        "head": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "fielddata": true,
+          "analyzer": "stop_analyzer"
+        },
+        "label": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "fielddata": true,
+          "analyzer": "stop_analyzer"
+        },
+        "tail": {
+          "type": "text",
+          "term_vector": "with_positions_offsets",
+          "fielddata": true,
+          "analyzer": "stop_analyzer"
+        },
+        "score": {
+          "type": "float"
+        }
+      }
+    }
+  },
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "stop_analyzer": {
+          "type": "pattern",
+          "pattern": "\\W|_",
+          "lowercase": true
+        }
+      }
+    }
+  }
+}

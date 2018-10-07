@@ -2,7 +2,6 @@ package com.dbpediaSentenseWindow;
 
 import com.esutil.ESSetter;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.htmlSentenceWindowWithMeta.ResultHitJsonSWM;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.elasticsearch.action.search.SearchResponse;
@@ -25,66 +24,33 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public class ESEngineSW {
+public class ESEngineSWDBpedia {
 
-    String originIndex = "ibm3s-all";
-    String tmpTagIndex = "ibm3s-tmp-tag";
-    String resultIndex = "ibm3s-tag-result";
+    String originIndex = "dbpedia3s";
+    String tmpTagIndex = "dbpedia3s-tmp-result";
+    String resultIndex = "dbpedia3s-result";
 
-    String defaultAnalyzer = "my_analyzer";
-    String entityAnalyzer = "my_entity_analyzer";
+    String defaultAnalyzer = "stop_analyzer";
 
-    //TransportClient client = null;
+    int size = 5;
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
 
-    public ESEngineSW withIndex(String newIndex) {
+    public ESEngineSWDBpedia withIndex(String newIndex) {
         this.originIndex = newIndex;
         return this;
     }
 
-    public ESEngineSW withResultIndex(String newIndex) {
+    public ESEngineSWDBpedia withResultIndex(String newIndex) {
         this.resultIndex = newIndex;
         return this;
     }
 
-    public void tryQuery() {
-        try {
-            // on startup
-            TransportClient client = getClient();
-            //GetResponse getResponse = client.prepareGet(index, "document", "1").get();
-
-            String queryString = "+storwize_error_code_1145 +has_url +it_kg_version1#storwize_error_code_1145_url";
-            String queryString2 = "+parameter +device +supply";
-            SearchResponse response = client.prepareSearch(originIndex)
-                    .setTypes("document")
-                    .setSearchType(SearchType.QUERY_THEN_FETCH)
-                    .setQuery(QueryBuilders.simpleQueryStringQuery(queryString2).field("sentence"))
-                    .execute().actionGet();
-
-            int count = 0;
-            for (SearchHit hit : response.getHits()) {
-                Map map = hit.getSourceAsMap();
-                if (count < 3) {
-                    System.out.println(map);
-                } else {
-                    break;
-                }
-                ++count;
-            }
-        } catch (Exception e) {
-            logger.error("failed to put search. ", e);
-            return;
-        }
-    }
-
     public TransportClient getClient() {
         try {
-//            if (client != null) {
-//                return client;
-//            }
-
             Settings settings = Settings.builder().put("cluster.name", "elasticsearch_sylvia.wang").build();
             TransportClient client = new PreBuiltTransportClient(settings)
                     .addTransportAddress(new TransportAddress(InetAddress.getByName("localhost"), 9300));
@@ -95,69 +61,23 @@ public class ESEngineSW {
         }
     }
 
-//    public void closeClient() {
-//        if (client != null) {
-//            client.close();
-//        }
-//    }
-/*
-    GET ibm3s-with-meta/_search
-    {
-        "from" : 0, "size" : 5,
-            "query": {
-        "bool": {
-            "should": [
-            {"multi_match" : {
-                "query" : "storwize_error_code_CMMVC5743E",
-                        "fields" : ["sentence"],
-                "analyzer" : "my_entity_analyzer",
-                        "boost": 5
-            }
-            },
-            {"more_like_this" : {
-                "fields" : ["title", "sentence", "description"],
-                "like" : "has_url",
-                        "min_term_freq" : 1,
-                        "max_query_terms" : 12,
-                        "analyzer" : "type"
-            }},
-            {"more_like_this" : {
-                "fields" : ["title", "sentence", "description"],
-                "like" : "storwize_error_code_CMMVC5743E_url",
-                        "min_term_freq" : 1,
-                        "max_query_terms" : 12,
-                        "analyzer" : "my_entity_analyzer",
-                        "boost": 1
-            }}
-        ],
-            "minimum_should_match" : "50%"
-        }
-    },
-        "sort" : "_score"
-    }
-*/
-
-    public List<ResultHitJsonSWM> getSWByEntitiesMixQuery(TransportClient client, List<String> entities) {
+    public List<ResultHitJsonSWDBpedia> getSWByEntitiesMixQuery(TransportClient client, List<String> entities) {
         try {
-            List<ResultHitJsonSWM> results = new ArrayList<>();
+            List<ResultHitJsonSWDBpedia> results = new ArrayList<>();
 
             String default_field = "sentence";
 
             BoolQueryBuilder qb = QueryBuilders.boolQuery();
             if (StringUtils.hasText(entities.get(0))) {
-                qb = qb.should(QueryBuilders.matchQuery(default_field, entities.get(0)).analyzer(entityAnalyzer).boost(2f));
+                qb = qb.should(QueryBuilders.matchQuery(default_field, entities.get(0)).analyzer(defaultAnalyzer).boost(2f));
             }
 
 //            if (StringUtils.hasText(entities.get(1))) {
 //                qb = qb.should(QueryBuilders.moreLikeThisQuery(new String[]{default_field}, new String[]{entities.get(1)}, null).analyzer(entityAnalyzer).minTermFreq(1).maxQueryTerms(12));
 //            }
-            String analyzer = defaultAnalyzer;
-            if (entities.get(2).contains("_")) {
-                analyzer = entityAnalyzer;
-            }
 
             if (StringUtils.hasText(entities.get(2))) {
-                qb = qb.should(QueryBuilders.moreLikeThisQuery(new String[]{default_field}, new String[]{entities.get(2)}, null).analyzer(analyzer).minTermFreq(1).maxQueryTerms(12).boost(2f));
+                qb = qb.should(QueryBuilders.moreLikeThisQuery(new String[]{default_field}, new String[]{entities.get(2)}, null).analyzer(defaultAnalyzer).minTermFreq(1).maxQueryTerms(12).boost(2f));
             }
             qb = qb.minimumShouldMatch("50%");
 
@@ -165,19 +85,16 @@ public class ESEngineSW {
                     .setTypes("document")
                     .setSearchType(SearchType.QUERY_THEN_FETCH)
                     .setFrom(0)
-                    .setSize(3)
+                    .setSize(size)
                     .setQuery(qb)
                     .addSort("_score", SortOrder.DESC)
                     .execute().actionGet();
 
             for (SearchHit hit : response.getHits()) {
                 Map map = hit.getSourceAsMap();
-                ResultHitJsonSWM r = new ResultHitJsonSWM(map, entities, hit.getScore());
+                ResultHitJsonSWDBpedia r = new ResultHitJsonSWDBpedia(map, entities, hit.getScore());
                 results.add(r);
             }
-//            if (results.size() > 0) {
-//                saveResult(results, tmpResultIndex);
-//            }
 
             return results;
 
@@ -187,18 +104,15 @@ public class ESEngineSW {
         }
     }
 
-    public String tagHeadEntity(TransportClient client, ResultHitJsonSWM sw) {
+    public String tagHeadEntity(TransportClient client, ResultHitJsonSWDBpedia sw) {
         try {
 
             String index = originIndex;
 
             String analyzer = defaultAnalyzer;
-            if (sw.head.contains("_")) {
-                analyzer = entityAnalyzer;
-            }
 
             BoolQueryBuilder qb = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.matchQuery("fileName", sw.fileName).analyzer(defaultAnalyzer))
+                    .must(QueryBuilders.matchPhraseQuery("uri", sw.uri).analyzer(defaultAnalyzer))
                     .must(QueryBuilders.termQuery("number", sw.number))
                     .must(QueryBuilders.matchPhraseQuery("sentence", sw.head).analyzer(analyzer));
             //.must(QueryBuilders.multiMatchQuery(sw.head, "sentence").analyzer(entityAnalyzer));
@@ -257,20 +171,63 @@ public class ESEngineSW {
         }
     }
 
-    public String tagTailEntity(TransportClient client, ResultHitJsonSWM sw) {
+    private String tagTailMatchSearch(TransportClient client, ResultHitJsonSWDBpedia sw) {
         try {
-            String analyzer = "my_analyzer";
-            if (sw.tail.contains("_")) {
-                analyzer = "my_entity_analyzer";
+            BoolQueryBuilder qb = QueryBuilders.boolQuery()
+                    .must(QueryBuilders.matchPhraseQuery("uri", sw.getUri()).slop(5).analyzer(defaultAnalyzer))
+                    .must(QueryBuilders.termQuery("number", sw.number))
+                    .must(QueryBuilders.matchQuery("sentence", sw.tail).analyzer(defaultAnalyzer));
+
+            HighlightBuilder hb = new HighlightBuilder()
+                    .preTags("<tail>")
+                    .postTags("</tail>")
+                    .highlighterType("fvh")
+                    .boundaryScannerType("sentence")
+                    .numOfFragments(0)
+                    .fragmentSize(200)
+                    .field("sentence");
+
+            SearchResponse response = client.prepareSearch(tmpTagIndex)
+                    .setTypes("document")
+                    .setSearchType(SearchType.QUERY_THEN_FETCH)
+                    .setFrom(0)
+                    .setSize(1)
+                    .setQuery(qb)
+                    .highlighter(hb)
+                    .execute().actionGet();
+
+            List<String> taggedSW = new ArrayList<>();
+            for (SearchHit hit : response.getHits()) {
+                Map<String, HighlightField> esHighlights = hit.getHighlightFields();
+                if (!esHighlights.isEmpty()) {
+                    for (Map.Entry<String, HighlightField> entry : esHighlights.entrySet()) {
+                        for (Text fragment : entry.getValue().getFragments()) {
+                            taggedSW.add(fragment.toString());
+                        }
+                    }
+                }
             }
+            if (taggedSW.size() > 0) {
+                return taggedSW.get(0);
+            } else {
+                return "";
+            }
+
+        } catch (Exception e) {
+            logger.error("failed to put search. ", e);
+            return null;
+        }
+    }
+
+    public String tagTailPhraseSearch(TransportClient client, ResultHitJsonSWDBpedia sw) {
+        try {
 
             //MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.tail, "sentence").analyzer(entityAnalyzer);
 
             BoolQueryBuilder qb = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.matchQuery("fileName", sw.fileName).analyzer(defaultAnalyzer))
+                    .must(QueryBuilders.matchPhraseQuery("uri", sw.getUri()).slop(5).analyzer(defaultAnalyzer))
                     .must(QueryBuilders.termQuery("number", sw.number))
-                    .must(QueryBuilders.matchPhraseQuery("sentence", sw.tail).analyzer(analyzer));
-            //.must(QueryBuilders.multiMatchQuery(sw.tail, "sentence").analyzer(entityAnalyzer));
+                    .must(QueryBuilders.matchPhraseQuery("sentence", sw.tail).slop(10).analyzer(defaultAnalyzer));
 
             HighlightBuilder hb = new HighlightBuilder()
                     .preTags("<tail>")
@@ -319,18 +276,20 @@ public class ESEngineSW {
                 .replace("</tail> <tail>", " ")
                 .replace("</tail><tail>", "");
 
-        merged = merged.replaceFirst("<head>", "<HEAD>")
-                .replaceFirst("</head>", "</HEAD>")
-                .replace("<head>", "")
-                .replace("</head>", "")
-                .replaceFirst("<tail>", "<TAIL>")
-                .replaceFirst("</tail>", "</TAIL>")
-                .replace("<tail>", "")
-                .replace("</tail>", "")
-                .replace("<HEAD>", "<head>")
-                .replace("</HEAD>", "</head>")
-                .replace("<TAIL>", "<tail>")
-                .replace("</TAIL>", "</tail>");
+        String regexHead = "<head>.*</head>";
+        String regexTail = "(<tail>)(.*)(</tail>)";
+
+        Pattern p = Pattern.compile(regexHead);   // the pattern to search for
+        Matcher m = p.matcher(merged);
+
+        // if we find a match, get the group
+        if (m.find()) {
+            // we're only looking for one group, so get it
+            String theGroup = m.group();
+
+        } else {
+
+        }
 
 
         if (!StringUtils.hasText(merged)) {
@@ -339,14 +298,14 @@ public class ESEngineSW {
         return merged;
     }
 
-    public List<ResultHitJsonSWM> getSWByEntitiesMatchQuery(TransportClient client, List<String> entities) {
+    public List<ResultHitJsonSWDBpedia> getSWByEntitiesMatchQuery(TransportClient client, List<String> entities) {
         try {
-            List<ResultHitJsonSWM> results = new ArrayList<>();
+            List<ResultHitJsonSWDBpedia> results = new ArrayList<>();
 
             //MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.tail, "sentence").analyzer(entityAnalyzer);
 
             BoolQueryBuilder qb = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.matchQuery("head", entities.get(0)).analyzer(entityAnalyzer))
+                    .must(QueryBuilders.matchQuery("head", entities.get(0)).analyzer(defaultAnalyzer))
                     //.must(QueryBuilders.matchQuery("label", entities.get(1)).analyzer(entityAnalyzer))
                     .must(QueryBuilders.matchQuery("tail", entities.get(2)).analyzer(defaultAnalyzer));
 
@@ -355,7 +314,7 @@ public class ESEngineSW {
                     .setTypes("document")
                     .setSearchType(SearchType.QUERY_THEN_FETCH)
                     .setFrom(0)
-                    .setSize(3)
+                    .setSize(size)
                     .setQuery(qb)
                     .addSort("score", SortOrder.DESC)
                     .execute().actionGet();
@@ -363,7 +322,7 @@ public class ESEngineSW {
             List<String> taggedSW = new ArrayList<>();
             for (SearchHit hit : response.getHits()) {
                 Map map = hit.getSourceAsMap();
-                ResultHitJsonSWM r = new ResultHitJsonSWM(map, entities, hit.getScore());
+                ResultHitJsonSWDBpedia r = new ResultHitJsonSWDBpedia(map, entities, hit.getScore());
                 results.add(r);
             }
             return results;
@@ -378,14 +337,14 @@ public class ESEngineSW {
         TransportClient client = null;
         try {
             client = getClient();
-            List<ResultHitJsonSWM> sws = getSWByEntitiesMixQuery(client, entities);
+            List<ResultHitJsonSWDBpedia> sws = getSWByEntitiesMixQuery(client, entities);
 
             if (sws == null) {
                 sws = getSWByEntitiesMatchQuery(client, entities);
             }
 
-            for (ResultHitJsonSWM sw : sws) {
-                ResultHitJsonSWM swTag = new ResultHitJsonSWM(sw);
+            for (ResultHitJsonSWDBpedia sw : sws) {
+                ResultHitJsonSWDBpedia swTag = new ResultHitJsonSWDBpedia(sw);
                 String taggedHeadSW = tagHeadEntity(client, sw);
                 if (StringUtils.hasText(taggedHeadSW)) {
                     taggedHeadSW = mergeTags(taggedHeadSW);
@@ -395,7 +354,11 @@ public class ESEngineSW {
                     sleepMillis(1000);
 
 
-                    String taggedTailSW = tagTailEntity(client, swTag);
+                    String taggedTailSW = tagTailPhraseSearch(client, swTag);
+                    if (!StringUtils.hasText(taggedTailSW)) {
+                        taggedTailSW = tagTailMatchSearch(client, swTag);
+                    }
+
                     if (StringUtils.hasText(taggedTailSW)) {
                         taggedTailSW = mergeTags(taggedTailSW);
                         swTag.setSentence(taggedTailSW);
@@ -416,7 +379,7 @@ public class ESEngineSW {
     }
 
 
-    public void saveTmpTag(ResultHitJsonSWM sw) {
+    public void saveTmpTag(ResultHitJsonSWDBpedia sw) {
         try {
             List<String> jsonStrs = new ArrayList();
             ObjectMapper mapper = new ObjectMapper();
@@ -429,7 +392,7 @@ public class ESEngineSW {
 
     }
 
-    public void saveResult(ResultHitJsonSWM result, String index) {
+    public void saveResult(ResultHitJsonSWDBpedia result, String index) {
         try {
             List<String> jsonStrs = new ArrayList();
             ObjectMapper mapper = new ObjectMapper();
@@ -441,22 +404,4 @@ public class ESEngineSW {
         }
 
     }
-
-    public void saveResult(List<ResultHitJsonSWM> result, String index) {
-        try {
-            List<String> jsonStrs = new ArrayList();
-            ObjectMapper mapper = new ObjectMapper();
-            for (ResultHitJsonSWM r : result) {
-                jsonStrs.add(mapper.writeValueAsString(r));
-            }
-
-
-            ESSetter esSetter = new ESSetter(index);
-            esSetter.putDocBulk(jsonStrs);
-        } catch (Exception e) {
-            logger.error("failed to save bulk result: ", e);
-        }
-
-    }
-
 }

@@ -22,7 +22,9 @@ public class SentenseSpliter {
 
             if (lastIndex != BreakIterator.DONE) {
                 String sentence = source.substring(firstIndex, lastIndex);
-                sentences.add(sentence);
+                if (!sentence.equals(".")) {
+                    sentences.add(sentence);
+                }
             }
         }
         return sentences;

@@ -5,8 +5,23 @@
             <PatternLayout pattern="%d{DEFAULT} [%c{1}]
       %highlight{%level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} - %msg%n" />
         </Console>
+        <!-- Rolling File Appender -->
+        <RollingFile name="RollingFile">
+            <FileName>elastic-html.log</FileName>
+            <FilePattern>%d{yyyy-MM-dd-hh-mm}.log</FilePattern>
+            <PatternLayout pattern="%d{DEFAULT} [%c{1}]
+      %highlight{%level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=blue} - %msg%n" />
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="2" modulate="true" />
+            </Policies>
+            <DefaultRolloverStrategy max="5" />
+        </RollingFile>
     </Appenders>
     <Loggers>
+        <Logger level="debug" additivity="false">
+            <AppenderRef ref="RollingFile" />
+            <AppenderRef ref="Console" />
+        </Logger>
         <Root level="ALL">
             <AppenderRef ref="Console"/>
         </Root>

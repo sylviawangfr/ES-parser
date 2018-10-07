@@ -1,5 +1,7 @@
 package com.dbpediaSentenseWindow;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -11,14 +13,15 @@ import java.util.List;
 public class WebdriverUtil {
 
     ChromeDriver driver;
+    private Logger logger = LogManager.getLogger(WebdriverUtil.class);
 
-    By bodyContent = By.id("bodyContent");
     By paragraph = By.tagName("p");
     By derivedFrom = By.cssSelector("a[rel='prov:wasDerivedFrom']");
 
     private ChromeDriver getDriver() {
         ChromeOptions options = getChromeOptions();
-        return new ChromeDriver(options);
+        return new  ChromeDriver(options);
+
     }
 
     private ChromeOptions getChromeOptions() {
@@ -40,6 +43,7 @@ public class WebdriverUtil {
 
     public String getPageContent(String url) {
         openPage(url);
+        waitForElementPresent(5, By.id("bodyContent"));
         List<WebElement> eles =  driver.findElements(paragraph);
         String content = "";
         for (WebElement e : eles) {
@@ -51,6 +55,7 @@ public class WebdriverUtil {
 
     public String getDerivedFrom(String url) {
         openPage(url);
+        waitForElementPresent(5, derivedFrom);
         List<WebElement> eles =  driver.findElements(derivedFrom);
         if (eles != null && eles.size() > 0) {
             return eles.get(0).getAttribute("href");
@@ -59,33 +64,29 @@ public class WebdriverUtil {
         }
     }
 
-    private void waitForPageLoad(long timeoutInSeconds) {
-        waitForElementPresent(timeoutInSeconds, bodyContent);
-    }
-
     private void waitForElementPresent(long timeout, By by) {
-        new WebDriverWait(driver, timeout).until(ExpectedConditions.visibilityOfElementLocated(by));
+        try {
+            new WebDriverWait(driver, timeout).until(ExpectedConditions.visibilityOfElementLocated(by));
+        } catch (Exception e) {
+            logger.error("element waiting timeout: " + by.toString());
+        }
     }
 
     private void openPage(String url) {
         if (driver == null) {
             driver = getDriver();
+            Runtime.getRuntime().addShutdownHook(new Thread() {
+                public void run() {
+                    driver.close();
+                }
+            });
         }
-        driver.get(url);
-        waitForPageLoad(3);
-
-        //add shutdown hook
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            public void run() {
-               close();
-            }
-        });
-    }
-
-    private void close() {
-        if (driver != null) {
+        try {
+            driver.get(url);
+        } catch (Exception e) {
             driver.close();
             driver = null;
+            logger.error("failed to open url : " + url);
         }
     }
 }

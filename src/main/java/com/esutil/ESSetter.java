@@ -163,7 +163,7 @@ public class ESSetter {
         }
     }
 
-    public void putDocBulk(List<String> jsonStrs) {
+    public boolean putDocBulk(List<String> jsonStrs) {
         try {
             String meta = "{ \"index\": {}}" + "\n";
             String url = "http://localhost:9200/" + index + "/document/_bulk/";
@@ -180,9 +180,11 @@ public class ESSetter {
                 }
                 postRequest(url, bulkRequestJson);
             }
+            return true;
 
         } catch (Exception e) {
             logger.error("failed to load sample data: ", e);
+            return false;
         }
     }
 

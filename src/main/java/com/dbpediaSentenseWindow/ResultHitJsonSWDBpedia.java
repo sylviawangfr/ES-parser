@@ -15,11 +15,11 @@ public class ResultHitJsonSWDBpedia {
     public String tail;
     public float score;
 
-    public ResultHitJsonSWDBpedia(Map<String, Object> sentenseWindowWithMeta, List<String> entities, float score) {
-        uri = (String) sentenseWindowWithMeta.get("uri");
-        sentence = (String) sentenseWindowWithMeta.get("sentence");
-        number = Long.parseLong(sentenseWindowWithMeta.get("number").toString());
-        derivedFrom = (String) sentenseWindowWithMeta.get("derivedFrom");
+    public ResultHitJsonSWDBpedia(Map<String, Object> sentenseWindowDBpedia, List<String> entities, float score) {
+        uri = (String) sentenseWindowDBpedia.get("uri");
+        sentence = (String) sentenseWindowDBpedia.get("sentence");
+        number = Long.parseLong(sentenseWindowDBpedia.get("number").toString());
+        derivedFrom = (String) sentenseWindowDBpedia.get("derivedFrom");
 
         this.score = score;
         if (entities.size() > 0) {

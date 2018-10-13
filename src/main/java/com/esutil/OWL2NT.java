@@ -68,11 +68,11 @@ public class OWL2NT {
 //            }
 //
 //            String content = IOUtils.toString(in, "UTF-8");
-//            String [] tripples = content.split(" .\n");
+//            String [] tripples = content.splitToSentences(" .\n");
 //
 //            for (int i = 0; i < tripples.length; i++) {
 //                String tri = tripples[i].trim();
-//                String [] entities = tri.split(" ");
+//                String [] entities = tri.splitToSentences(" ");
 //                List<String> oneTri = new ArrayList<>();
 //                for (int j = 0; j < entities.length; j++) {
 //                    String entity = trimEntity(entities[j]);

@@ -22,6 +22,7 @@ import org.springframework.util.StringUtils;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -38,6 +39,8 @@ public class ESEngineSWDBpedia {
     int size = 5;
 
     private Logger logger = LogManager.getLogger(ESSetter.class);
+
+    private TagUtil tagUtil = new TagUtil();
 
     public ESEngineSWDBpedia withIndex(String newIndex) {
         this.originIndex = newIndex;
@@ -105,62 +108,16 @@ public class ESEngineSWDBpedia {
     }
 
     public String tagHeadEntity(TransportClient client, ResultHitJsonSWDBpedia sw) {
-        try {
-
-            String index = originIndex;
-
-            String analyzer = defaultAnalyzer;
-
-            BoolQueryBuilder qb = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.matchPhraseQuery("uri", sw.uri).analyzer(defaultAnalyzer))
-                    .must(QueryBuilders.termQuery("number", sw.number))
-                    .must(QueryBuilders.matchPhraseQuery("sentence", sw.head).analyzer(analyzer));
-            //.must(QueryBuilders.multiMatchQuery(sw.head, "sentence").analyzer(entityAnalyzer));
-
-            //MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.head, "sentence").analyzer(entityAnalyzer);
-
-            HighlightBuilder hb = new HighlightBuilder()
-                    .preTags("<head>")
-                    .postTags("</head>")
-                    .highlighterType("fvh")
-                    .boundaryScannerType("sentence")
-                    .numOfFragments(0)
-                    .fragmentSize(200)
-                    .field("sentence");
-
-            SearchResponse response = client.prepareSearch(index)
-                    .setTypes("document")
-                    .setSearchType(SearchType.QUERY_THEN_FETCH)
-                    .setFrom(0)
-                    .setSize(1)
-                    .setQuery(qb)
-                    .highlighter(hb)
-                    .execute().actionGet();
-
-            List<String> taggedSW = new ArrayList<>();
-            for (SearchHit hit : response.getHits()) {
-                Map<String, HighlightField> esHighlights = hit.getHighlightFields();
-                if (!esHighlights.isEmpty()) {
-                    for (Map.Entry<String, HighlightField> entry : esHighlights.entrySet()) {
-                        for (Text fragment : entry.getValue().getFragments()) {
-                            taggedSW.add(fragment.toString());
-                        }
-                    }
-                }
-
+        String taged = tagPhraseSearch(client, originIndex, sw, sw.head, "head");
+        if (StringUtils.hasText(taged)) {
+            return taged;
+        } else {
+            String reducedTail = reduceKeyword(sw.head);
+            if (!reducedTail.equals(sw.head)) {
+                return tagPhraseSearch(client, originIndex, sw, reducedTail, "head");
             }
-
-
-            if (taggedSW.size() > 0) {
-                return taggedSW.get(0);
-            } else {
-                return "";
-            }
-
-        } catch (Exception e) {
-            logger.error("failed to put search. ", e);
-            return null;
         }
+        return "";
     }
 
     public void sleepMillis(long millis) {
@@ -174,7 +131,7 @@ public class ESEngineSWDBpedia {
     private String tagTailMatchSearch(TransportClient client, ResultHitJsonSWDBpedia sw) {
         try {
             BoolQueryBuilder qb = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.matchPhraseQuery("uri", sw.getUri()).slop(5).analyzer(defaultAnalyzer))
+                    .must(QueryBuilders.matchPhraseQuery("uri", sw.getUri()).slop(3).analyzer(defaultAnalyzer))
                     .must(QueryBuilders.termQuery("number", sw.number))
                     .must(QueryBuilders.matchQuery("sentence", sw.tail).analyzer(defaultAnalyzer));
 
@@ -219,26 +176,23 @@ public class ESEngineSWDBpedia {
         }
     }
 
-    public String tagTailPhraseSearch(TransportClient client, ResultHitJsonSWDBpedia sw) {
+    public String tagPhraseSearch(TransportClient client, String index, ResultHitJsonSWDBpedia sw, String keyword, String tag) {
         try {
-
-            //MultiMatchQueryBuilder qb = QueryBuilders.multiMatchQuery(sw.tail, "sentence").analyzer(entityAnalyzer);
-
             BoolQueryBuilder qb = QueryBuilders.boolQuery()
-                    .must(QueryBuilders.matchPhraseQuery("uri", sw.getUri()).slop(5).analyzer(defaultAnalyzer))
+                    .must(QueryBuilders.matchPhraseQuery("uri", sw.getUri()).slop(3).analyzer(defaultAnalyzer))
                     .must(QueryBuilders.termQuery("number", sw.number))
-                    .must(QueryBuilders.matchPhraseQuery("sentence", sw.tail).slop(10).analyzer(defaultAnalyzer));
+                    .must(QueryBuilders.matchPhraseQuery("sentence", keyword).slop(10).analyzer(defaultAnalyzer));
 
             HighlightBuilder hb = new HighlightBuilder()
-                    .preTags("<tail>")
-                    .postTags("</tail>")
+                    .preTags("<" + tag + ">")
+                    .postTags("</" + tag + ">")
                     .highlighterType("fvh")
                     .boundaryScannerType("sentence")
                     .numOfFragments(0)
                     .fragmentSize(200)
                     .field("sentence");
 
-            SearchResponse response = client.prepareSearch(tmpTagIndex)
+            SearchResponse response = client.prepareSearch(index)
                     .setTypes("document")
                     .setSearchType(SearchType.QUERY_THEN_FETCH)
                     .setFrom(0)
@@ -248,6 +202,7 @@ public class ESEngineSWDBpedia {
                     .execute().actionGet();
 
             List<String> taggedSW = new ArrayList<>();
+
             for (SearchHit hit : response.getHits()) {
                 Map<String, HighlightField> esHighlights = hit.getHighlightFields();
                 if (!esHighlights.isEmpty()) {
@@ -270,32 +225,27 @@ public class ESEngineSWDBpedia {
         }
     }
 
-    public String mergeTags(String taggedSW) {
-        String merged = taggedSW.replace("</head> <head>", " ")
-                .replace("</head><head>", "")
-                .replace("</tail> <tail>", " ")
-                .replace("</tail><tail>", "");
-
-        String regexHead = "<head>.*</head>";
-        String regexTail = "(<tail>)(.*)(</tail>)";
-
-        Pattern p = Pattern.compile(regexHead);   // the pattern to search for
-        Matcher m = p.matcher(merged);
-
-        // if we find a match, get the group
-        if (m.find()) {
-            // we're only looking for one group, so get it
-            String theGroup = m.group();
-
+    private String reduceKeyword(String keyword) {
+        if (keyword.contains("(")) {
+            String trim = keyword.substring(keyword.indexOf("("), keyword.indexOf(")"));
+            String reduceTail = keyword.replace(trim, "");
+            return reduceTail;
         } else {
-
+            return keyword;
         }
+    }
 
-
-        if (!StringUtils.hasText(merged)) {
-            int i = 0;
+    public String tagTailPhraseSearch(TransportClient client, ResultHitJsonSWDBpedia sw) {
+        String taged = tagPhraseSearch(client, tmpTagIndex, sw, sw.tail, "tail");
+        if (StringUtils.hasText(taged)) {
+            return taged;
+        } else {
+            String reducedTail = reduceKeyword(sw.tail);
+            if (!reducedTail.equals(sw.tail)) {
+                return tagPhraseSearch(client, tmpTagIndex, sw, reducedTail, "tail");
+            }
         }
-        return merged;
+        return "";
     }
 
     public List<ResultHitJsonSWDBpedia> getSWByEntitiesMatchQuery(TransportClient client, List<String> entities) {
@@ -347,7 +297,7 @@ public class ESEngineSWDBpedia {
                 ResultHitJsonSWDBpedia swTag = new ResultHitJsonSWDBpedia(sw);
                 String taggedHeadSW = tagHeadEntity(client, sw);
                 if (StringUtils.hasText(taggedHeadSW)) {
-                    taggedHeadSW = mergeTags(taggedHeadSW);
+                    taggedHeadSW = tagUtil.mergeTags(taggedHeadSW);
                     swTag.setSentence(taggedHeadSW);
                     sleepMillis(500);
                     saveTmpTag(swTag);
@@ -360,7 +310,7 @@ public class ESEngineSWDBpedia {
                     }
 
                     if (StringUtils.hasText(taggedTailSW)) {
-                        taggedTailSW = mergeTags(taggedTailSW);
+                        taggedTailSW = tagUtil.mergeTags(taggedTailSW);
                         swTag.setSentence(taggedTailSW);
 
                         sleepMillis(500);

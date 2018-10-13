@@ -2,6 +2,7 @@ package com.ExecutablesDBpedia;
 
 import com.dbpediaSentenseWindow.ESEngineSWDBpedia;
 import com.dbpediaSentenseWindow.EntityToSW;
+import com.dbpediaSentenseWindow.TagUtil;
 import com.esutil.OWL2NT;
 import com.htmlSentenceWindowWithMeta.ESEngineSWM;
 
@@ -12,14 +13,15 @@ public final class SearchEngineDBpedia {
 
 
     public static void main(String[] args) {
-//        EntityToSW entityToSW = new EntityToSW();
+        //EntityToSW entityToSW = new EntityToSW();
 
 
-//        List<List<String>> tris = entityToSW.getTriples(0, 2);
-//
-        ESEngineSWDBpedia esEngine = new ESEngineSWDBpedia();
-        String s = "<head>test head</head> tttt tttt <head>test head</head> ddd ddd";
-        esEngine.mergeTags(s);
+        //List<List<String>> tris = entityToSW.getTriples(0, 50);
+        //ESEngineSWDBpedia esEngine = new ESEngineSWDBpedia();
+
+        String s = "<head> test1 </head> test2 <tail> test3 </tail> <head> test4 </head> ddd5 <tail> test6 </tail> tt <head> test7 </head>";
+        TagUtil tagUtil = new TagUtil();
+        tagUtil.mergeTagsNearest(s);
 
 //        int i = 0;
 //        try {

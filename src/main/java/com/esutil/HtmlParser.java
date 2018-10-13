@@ -25,7 +25,7 @@ public class HtmlParser {
 
     public Sentence[] parseBody(Document doc) {
         String body = doc.select("body > doc").text();
-        List<String > sentencesStr =  SentenseSpliter.split(body); //.toArray(new String[0]);
+        List<String > sentencesStr =  SentenseSpliter.splitToSentences(body); //.toArray(new String[0]);
         List<Sentence> sentences = new ArrayList<>();
         int i = 0;
         for(String s : sentencesStr) {

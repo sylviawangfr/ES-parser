@@ -122,7 +122,7 @@ public class EntityToSW {
             return contents;
         }
 
-        List<String> sentences = SentenseSpliter.split(page);
+        List<String> sentences = SentenseSpliter.splitToSentences(page);
 
         int i = 0;
         int j = 0;

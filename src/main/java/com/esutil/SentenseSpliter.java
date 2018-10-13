@@ -7,7 +7,7 @@ import java.util.Locale;
 
 public class SentenseSpliter {
 
-    public static List<String> split(String source) {
+    public static List<String> splitToSentences(String source) {
 
         List<String> sentences = new ArrayList<>();
 

@@ -13,23 +13,23 @@ public class TagUtil {
                 .replace("</head><head>", "")
                 .replace("</tail> <tail>", " ")
                 .replace("</tail><tail>", "");
-        merged = merged.replaceFirst("<head>", "<HEAD>")
-                .replaceFirst("</head>", "</HEAD>")
-                .replace("<head>", "")
-                .replace("</head>", "")
-                .replaceFirst("<tail>", "<TAIL>")
-                .replaceFirst("</tail>", "</TAIL>")
-                .replace("<tail>", "")
-                .replace("</tail>", "")
-                .replace("<HEAD>", "<head>")
-                .replace("</HEAD>", "</head>")
-                .replace("<TAIL>", "<tail>")
-                .replace("</TAIL>", "</tail>");
+//        merged = merged.replaceFirst("<head>", "<HEAD>")
+//                .replaceFirst("</head>", "</HEAD>")
+//                .replace("<head>", "")
+//                .replace("</head>", "")
+//                .replaceFirst("<tail>", "<TAIL>")
+//                .replaceFirst("</tail>", "</TAIL>")
+//                .replace("<tail>", "")
+//                .replace("</tail>", "")
+//                .replace("<HEAD>", "<head>")
+//                .replace("</HEAD>", "</head>")
+//                .replace("<TAIL>", "<tail>")
+//                .replace("</TAIL>", "</tail>");
 
         return merged;
     }
 
-    public String mergeTagsNearest(String taggedSW) {
+    public String tagNearest(String taggedSW) {
         String merged = taggedSW.replace("</head> <head>", " ")
                 .replace("</head><head>", "")
                 .replace("</tail> <tail>", " ")

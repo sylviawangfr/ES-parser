@@ -21,7 +21,7 @@ public final class SearchEngineDBpedia {
 
 //        String s = "<head> test1 </head> test2 <tail> test3 </tail> <head> test4 </head> ddd5 <tail> test6 </tail> tt <head> test7 </head>";
 //        TagUtil tagUtil = new TagUtil();
-//        tagUtil.mergeTagsNearest(s);
+//        tagUtil.tagNearest(s);
 
         int i = 0;
         try {

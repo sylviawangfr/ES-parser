@@ -42,7 +42,9 @@ public class WebdriverUtil {
     }
 
     public String getPageContent(String url) {
-        openPage(url);
+        if (!openPage(url)) {
+            return "";
+        }
         waitForElementPresent(5, By.id("bodyContent"));
         List<WebElement> eles =  driver.findElements(paragraph);
         String content = "";
@@ -54,7 +56,10 @@ public class WebdriverUtil {
     }
 
     public String getDerivedFrom(String url) {
-        openPage(url);
+        if (!openPage(url)) {
+            return "";
+        }
+
         waitForElementPresent(5, derivedFrom);
         List<WebElement> eles =  driver.findElements(derivedFrom);
         if (eles != null && eles.size() > 0) {
@@ -72,21 +77,25 @@ public class WebdriverUtil {
         }
     }
 
-    private void openPage(String url) {
+    private boolean openPage(String url) {
         if (driver == null) {
             driver = getDriver();
             Runtime.getRuntime().addShutdownHook(new Thread() {
                 public void run() {
-                    driver.close();
+                    if (driver != null) {
+                        driver.close();
+                    }
                 }
             });
         }
         try {
             driver.get(url);
+            return true;
         } catch (Exception e) {
             driver.close();
             driver = null;
             logger.error("failed to open url : " + url);
+            return false;
         }
     }
 }

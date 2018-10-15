@@ -202,11 +202,28 @@ public class EntityToSW {
         for (String entity : entities) {
             if (!isHandledEntity(entity)) {
                 List<DocJsonSWDBpedia> sws = generateSWForEntity(entity);
-                logger.info("created sw for entity: " + entity);
-                if (saveSWsToES(sws)) { //keep log for ES existing entities
-                    saveEntityToFile(entity);
+                if (sws != null && sws.size() > 0 ) {
+                    logger.info("created sw for entity: " + entity);
+                    if (saveSWsToES(sws)) { //keep log for ES existing entities
+                        saveEntityToFile(entity);
+                    } else {
+                        saveFailedEntities(entity);
+                    }
+                } else {
+                    saveFailedEntities(entity);
                 }
             }
+        }
+    }
+
+    private void saveFailedEntities(String entity) {
+        try {
+            String fileName = "failedEntities.txt";
+            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+            writer.append(entity + "\n");
+            writer.close();
+        } catch (Exception e) {
+            logger.error(e);
         }
     }
 

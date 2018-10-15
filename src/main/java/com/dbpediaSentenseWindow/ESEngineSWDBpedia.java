@@ -12,6 +12,8 @@ import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.transport.TransportAddress;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryAction;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightField;
@@ -19,6 +21,8 @@ import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.springframework.util.StringUtils;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -32,6 +36,8 @@ public class ESEngineSWDBpedia {
     String resultIndex = "dbpedia3s-result";
 
     String defaultAnalyzer = "stop_analyzer";
+
+    String noMatchFileName = "noMatchTriples.txt";
 
     int size = 5;
 
@@ -289,7 +295,7 @@ public class ESEngineSWDBpedia {
             if (sws == null) {
                 sws = getSWByEntitiesMatchQuery(client, entities);
             }
-
+            boolean hasResult = false;
             for (ResultHitJsonSWDBpedia sw : sws) {
                 ResultHitJsonSWDBpedia swTag = new ResultHitJsonSWDBpedia(sw);
                 String taggedHeadSW = tagHeadEntity(client, sw);
@@ -302,9 +308,9 @@ public class ESEngineSWDBpedia {
 
 
                     String taggedTailSW = tagTailPhraseSearch(client, swTag);
-                    if (!StringUtils.hasText(taggedTailSW)) {
-                        taggedTailSW = tagTailMatchSearch(client, swTag);
-                    }
+//                    if (!StringUtils.hasText(taggedTailSW)) {
+//                        taggedTailSW = tagTailMatchSearch(client, swTag);
+//                    }
 
                     if (StringUtils.hasText(taggedTailSW)) {
                         taggedTailSW = tagUtil.mergeTags(taggedTailSW);
@@ -314,16 +320,50 @@ public class ESEngineSWDBpedia {
                         sleepMillis(500);
                         if (!sw.sentence.equals(swTag.sentence)) {
                             saveResult(swTag, resultIndex);
+                            hasResult = true;
                         }
                     }
                 }
             }
+
+            if (!hasResult) {
+                saveNoMatchTriple(entities);
+            }
+
+            deleteTmpResult(client);
+
         } catch (Exception e) {
             logger.error(e);
         } finally {
+            saveNoMatchTriple(entities);
             client.close();
         }
 
+    }
+
+    public void saveNoMatchTriple(List<String> entities) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(noMatchFileName, true));
+            String triple = String.join("\t", entities);
+            writer.append(triple + "\n");
+            writer.close();
+        } catch (Exception e) {
+            logger.error(e);
+        }
+    }
+
+    public long deleteTmpResult(TransportClient client) {
+        try {
+            BulkByScrollResponse response = DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
+                    .filter(QueryBuilders.matchAllQuery())
+                    .source(tmpTagIndex)
+                    .get();
+            long deleted = response.getDeleted();
+            return deleted;
+        } catch (Exception e) {
+            logger.error(e);
+            return 0;
+        }
     }
 
 
@@ -348,7 +388,7 @@ public class ESEngineSWDBpedia {
             ESSetter esSetter = new ESSetter(index);
             esSetter.putDocBulk(jsonStrs);
         } catch (Exception e) {
-            logger.error("failed to same single result: ", e);
+            logger.error("failed to save single result: ", e);
         }
 
     }

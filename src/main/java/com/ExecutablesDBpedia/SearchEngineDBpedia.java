@@ -7,6 +7,7 @@ import com.esutil.OWL2NT;
 import com.htmlSentenceWindowWithMeta.ESEngineSWM;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public final class SearchEngineDBpedia {
@@ -15,13 +16,9 @@ public final class SearchEngineDBpedia {
     public static void main(String[] args) {
         EntityToSW entityToSW = new EntityToSW();
 
-
-        List<List<String>> tris = entityToSW.getTriples(50, 1000);
+        List<List<String>> tris = entityToSW.getTriples(0, 1000);
         ESEngineSWDBpedia esEngine = new ESEngineSWDBpedia();
 
-//        String s = "<head> test1 </head> test2 <tail> test3 </tail> <head> test4 </head> ddd5 <tail> test6 </tail> tt <head> test7 </head>";
-//        TagUtil tagUtil = new TagUtil();
-//        tagUtil.tagNearest(s);
 
         int i = 0;
         try {

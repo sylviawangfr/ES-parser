@@ -9,8 +9,7 @@ public final class EntitiesToES {
 
     public static void main(String[] args) {
         EntityToSW entityToSW = new EntityToSW();
-        entityToSW.entitiesToESWorkflow(50, 200);
+        entityToSW.entitiesToESWorkflow(0, 1000);
     }
-
 
 }

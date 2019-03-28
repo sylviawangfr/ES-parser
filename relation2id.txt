@@ -1,0 +1,15 @@
+14
+has_task    0
+disjointWith    1
+treats    2
+location_of    3
+subClassOf    4
+rest    5
+first    6
+range    7
+domain    8
+members    9
+has_error_code    10
+contains    11
+unionOf    12
+inverseOf    13

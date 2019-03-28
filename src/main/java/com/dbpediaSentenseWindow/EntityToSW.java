@@ -10,10 +10,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.util.StringUtils;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.InputStream;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,21 +18,25 @@ import java.util.List;
 
 public class EntityToSW {
 
-    private Logger logger = LogManager.getLogger(EntityToSW.class);
-
     private WebdriverUtil webdriverUtil = new WebdriverUtil();
 
     private ESSetter esSetter = new ESSetter("dbpedia3s");
 
-    String contextFileName = "existingEntities.txt";
+    String existingEntitiesContextFileName = "existingEntities.txt";
 
-    List<String> handledEntities = new ArrayList<>();
+    String failedEntitiesContextFileName = "failedEntities.txt";
 
-    public List<List<String>> getAllTriples() {
+    String tripleFileOriginal = "dbpediaPoliticalTriplesSubset.txt";
+
+    String tripleFileLearnt = "validLabels.txt";
+
+    private Logger logger = LogManager.getLogger(EntityToSW.class);
+
+    public List<List<String>> getAllTriples(String fileName) {
         List<List<String>> entityList = new ArrayList<>();
         List<String> errors = new ArrayList<>();
         try {
-            ClassPathResource resource = new ClassPathResource("dbpediaPoliticalTriplesSubset.txt");
+            ClassPathResource resource = new ClassPathResource(fileName);
             InputStream in = resource.getInputStream();
 
             if (in == null) {
@@ -65,8 +66,8 @@ public class EntityToSW {
         return entityList;
     }
 
-    public List<List<String>> getTriples(int start, int end) {
-        List<List<String>> all = getAllTriples();
+    public List<List<String>> getTriples(String fileName, int start, int end) {
+        List<List<String>> all = getAllTriples(fileName);
         return all.subList(start, end);
     }
 
@@ -94,7 +95,7 @@ public class EntityToSW {
             }
             return esSetter.putDocBulk(jsonStrs);
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(e.getMessage());
             return false;
         }
     }
@@ -151,13 +152,9 @@ public class EntityToSW {
         return contents;
     }
 
-    private List<String> getHandledEntitiesContext() {
-
-        List<String> defalutNull = new ArrayList<>();
+    private List<String> readEntitiesFromFile(String fileName) throws IOException {
         try {
-            String fileName = "existingEntities.txt";
             File file = new File(fileName);
-            logger.info("File = " + file.getAbsolutePath());
 
             if (!file.exists()) {
                 System.out.println("file not found. creating file");
@@ -168,62 +165,102 @@ public class EntityToSW {
             String content = FileUtils.readFileToString(file, StandardCharsets.UTF_8);
             return new ArrayList<String>(Arrays.asList(content.split("\\r?\\n")));
         } catch (Exception e) {
-            logger.error(e);
-            return defalutNull;
+            logger.error(e.getMessage());
+            throw e;
         }
     }
 
-    private boolean isHandledEntity(String entity) {
-        return handledEntities.contains(entity);
+    private List<String> getFailedEntitiesContext() throws IOException {
+        return readEntitiesFromFile(failedEntitiesContextFileName);
+    }
+
+    private List<String> getHandledEntitiesContext() throws IOException {
+        return readEntitiesFromFile(existingEntitiesContextFileName);
     }
 
     private void saveEntityToFile(String entity) {
         try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(contextFileName, true));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(existingEntitiesContextFileName, true));
             writer.append(entity + "\n");
             writer.close();
 
         } catch (Exception e) {
-            logger.error("file read or write error: " + entity, e);
+            logger.error("file read or write error: " + entity + e.getMessage());
         }
     }
 
     public void entitiesToESWorkflow(int startTripleIndex, int endTripleIndex) {
-        List<List<String>> subset = getTriples(startTripleIndex, endTripleIndex);
+        entitiesToESWorkflow(tripleFileOriginal, startTripleIndex, endTripleIndex);
+    }
+
+    public void learntEntityToESWorkflow(int startTripleIndex, int endTripleIndex) {
+        entitiesToESWorkflow(tripleFileLearnt, startTripleIndex, endTripleIndex);
+    }
+
+
+    public void entitiesToESWorkflow(String fileName, int startTripleIndex, int endTripleIndex) {
+        List<List<String>> subset = getTriples(fileName, startTripleIndex, endTripleIndex);
         List<String> entities = getEntities(subset);
 
         //prepare context log file
-        handledEntities = getHandledEntitiesContext();
-        if (handledEntities == null || handledEntities.size() == 0) {
-            logger.error("failed to prepare context log file, break");
-            return;
-        }
+        try {
+            List<String> handledEntities = getHandledEntitiesContext();
+            List<String> failedEntities = getFailedEntitiesContext();
 
-        for (String entity : entities) {
-            if (!isHandledEntity(entity)) {
-                List<DocJsonSWDBpedia> sws = generateSWForEntity(entity);
-                if (sws != null && sws.size() > 0 ) {
-                    logger.info("created sw for entity: " + entity);
-                    if (saveSWsToES(sws)) { //keep log for ES existing entities
-                        saveEntityToFile(entity);
+            for (String entity : entities) {
+                if (!handledEntities.contains(entity) && !failedEntities.contains(entity)) {
+                    List<DocJsonSWDBpedia> sws = generateSWForEntity(entity);
+                    if (sws != null && sws.size() > 0) {
+                        logger.info("created sw for entity: " + entity);
+                        if (saveSWsToES(sws)) { //keep log for ES existing entities
+                            saveEntityToFile(entity);
+                        } else {
+                            saveFailedEntities(entity);
+                        }
                     } else {
                         saveFailedEntities(entity);
                     }
-                } else {
-                    saveFailedEntities(entity);
                 }
             }
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return;
         }
     }
 
     private void saveFailedEntities(String entity) {
         try {
-            String fileName = "failedEntities.txt";
-            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName, true));
+            BufferedWriter writer = new BufferedWriter(new FileWriter(failedEntitiesContextFileName, true));
             writer.append(entity + "\n");
             writer.close();
         } catch (Exception e) {
-            logger.error(e);
+            logger.error(e.getMessage());
+        }
+    }
+
+    public void rerunFailedEntities() {
+        try {
+            List<String> handledEntities = getHandledEntitiesContext();
+            List<String> failedEntities = getFailedEntitiesContext();
+
+            for (String entity : failedEntities) {
+                if (!handledEntities.contains(entity)) {
+                    List<DocJsonSWDBpedia> sws = generateSWForEntity(entity);
+                    if (sws != null && sws.size() > 0) {
+                        logger.info("created sw for entity: " + entity);
+                        if (saveSWsToES(sws)) { //keep log for ES existing entities
+                            saveEntityToFile(entity);
+                        } else {
+                            saveFailedEntities(entity);
+                        }
+                    } else {
+                        saveFailedEntities(entity);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            logger.error(e.getMessage());
+            return;
         }
     }
 

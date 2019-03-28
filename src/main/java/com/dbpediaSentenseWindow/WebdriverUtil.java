@@ -37,7 +37,7 @@ public class WebdriverUtil {
         options.addArguments("--allow-running-insecure-content");
         options.addArguments("--disable-infobars");
         options.addArguments("--allow-cross-origin-auth-prompt");
-        options.addArguments("--headless");
+        //options.addArguments("--headless");
         return options;
     }
 

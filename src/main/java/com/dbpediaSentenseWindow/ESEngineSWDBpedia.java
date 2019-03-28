@@ -41,7 +41,7 @@ public class ESEngineSWDBpedia {
 
     int size = 5;
 
-    private Logger logger = LogManager.getLogger(ESSetter.class);
+    private Logger logger = LogManager.getLogger(ESEngineSWDBpedia.class);
 
     private TagUtil tagUtil = new TagUtil();
 
@@ -305,8 +305,6 @@ public class ESEngineSWDBpedia {
                     sleepMillis(500);
                     saveTmpTag(swTag);
                     sleepMillis(1000);
-
-
                     String taggedTailSW = tagTailPhraseSearch(client, swTag);
 //                    if (!StringUtils.hasText(taggedTailSW)) {
 //                        taggedTailSW = tagTailMatchSearch(client, swTag);
@@ -333,9 +331,9 @@ public class ESEngineSWDBpedia {
             deleteTmpResult(client);
 
         } catch (Exception e) {
-            logger.error(e);
-        } finally {
+            logger.error(e.getMessage());
             saveNoMatchTriple(entities);
+        } finally {
             client.close();
         }
 

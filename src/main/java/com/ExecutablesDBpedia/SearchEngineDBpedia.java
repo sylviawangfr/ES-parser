@@ -16,10 +16,14 @@ public final class SearchEngineDBpedia {
     public static void main(String[] args) {
         EntityToSW entityToSW = new EntityToSW();
 
-        List<List<String>> tris = entityToSW.getTriples(0, 1000);
+        //String tripleFileOriginal = "dbpediaPoliticalTriplesSubset.txt";
+
+        String tripleFileLearnt = "validLabels.txt";
+
+        List<List<String>> tris = entityToSW.getTriples(tripleFileLearnt,0, 1000);
+
         ESEngineSWDBpedia esEngine = new ESEngineSWDBpedia();
-
-
+        esEngine = esEngine.withResultIndex("dbpedia3s-learnt-triple-result");
         int i = 0;
         try {
             for (int j = 0; j < tris.size(); j++) {
